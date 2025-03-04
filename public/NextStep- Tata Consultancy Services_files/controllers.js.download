@@ -1,0 +1,2907 @@
+
+define(['angular','application','angularRoute','getDataBaseServices','constants','nprogress','parallax'],function(angular,candApplication,angularRoute,getDataBaseServices,constants,NProgress,parallax){
+	'use strict';
+//var nextStepIndiaController = angular.module('NextStepCandidateIndia.controller',[]);
+
+candApplication.controller('faqPageController',function($scope,$window,$rootScope,$location,getDataBaseServices,NextStepIndiaConstants,$http,$timeout){
+	//alert("hi");
+	if ($location.path()=="/helpAndSupport") {
+		$(".registerHereCol").css('visibility','visible');	
+		$(".registerHereCol").removeClass('display');
+		$(".logo").removeClass('sprite-Logo');
+	 	$(".logo").addClass('sprite-Color-Logo');		    	
+	 	$(".menuGrid > table a").addClass("blackColor");
+	 	$(".menuGrid > table td").mouseover(function() {
+	 	    $(this).css("border-bottom","1px solid black");
+	 	}).mouseout(function() {
+	 	    $(this).css("border-bottom","none");
+	 	});		    	
+	 	$(".search1").css('visibility','hidden');
+	 	$(".search1").addClass('display');
+	 	$(".search1").removeClass('sprite-search');
+	 	$(".search2").addClass('sprite-search-Dark');
+	 	$(".search2").css('visibility','visible');
+	 	$(".search2").removeClass('display');		    	
+	 	$(".user1").css('visibility','hidden');
+	 	$(".user1").addClass('display');
+	 	$(".user1").removeClass('sprite-User');
+	 	$(".user2").addClass('sprite-User-Dark');
+	 	$(".user2").css('visibility','visible');
+	 	$(".user2").removeClass('display');	
+		$rootScope.login="";
+		$('body').css('overflow-x','hidden');
+	}		    	
+	$rootScope.mailSuccess = false;
+	$rootScope.userVO={};
+	$rootScope.userVO.username="";
+	$rootScope.userVO.password="";
+	$rootScope.userVO.loginOTP="";
+	$scope.faqData = null;
+	$scope.registrationArray = [];
+	$scope.applicationArray = [];
+	$scope.reschedulingArray = [];
+	$scope.nsrArray = [];
+	$scope.bgcArray = [];
+	$scope.firstDayArray = [];
+	$scope.serviceAgreementArray = [];
+	$scope.documentSubmissionArray = [];
+	$scope.birthCertificateArray = [];
+	$scope.userData = null;
+	$scope.faqMailData = {};
+	$scope.totalSize = 0;
+	$scope.mailAttachmentFileData = [];
+	$scope.mailAttachmentFileNames = [];
+	$scope.registrationStatus=[];
+	$scope.applicationStatus=[];
+	$scope.reschedulingStatus=[];
+	$scope.nsrStatus=[];
+	$scope.bgcStatus=[];
+	$scope.firstDayStatus=[];
+	$scope.saStatus=[];
+	$scope.dsStatus=[];
+	$scope.bcStatus=[];
+	$scope.questionInputDiv = false;
+	$rootScope.loginfaqtab=true;
+	$rootScope.otpfaqtab=false;
+	$rootScope.timerOnfaq = false;
+	
+	if($scope.faqMailData.mailAttachmentVO==undefined){
+		$scope.faqMailData.mailAttachmentVO = [];
+	}
+	
+	getDataBaseServices.faqData().success(function(response){
+		if(null!==response){
+			$scope.registrationArray = response.registrationForm;
+			$scope.applicationArray = response.applicationForm;
+			$scope.reschedulingArray = response.reschedulingILP;
+			$scope.nsrArray = response.nsr;
+			$scope.bgcArray = response.bgc;
+			$scope.firstDayArray = response.firstDay;
+			$scope.serviceAgreementArray = response.serviceAgreement;
+			$scope.documentSubmissionArray = response.documentSubmission;
+			$scope.birthCertificateArray = response.birthCertificate;	
+		}
+	}).error(function(response){
+
+	});
+	
+	$scope.registerFlag=function(){	
+		$rootScope.login="ncp";
+		getDataBaseServices.setRegisterCandidateSummary(true);
+	}
+	
+	/* FAQ Mailer Modal Window starts */
+	$scope.updateModalWindow = function() {
+		if ($scope.faqMailData.faqCategory == "Others") {
+			$scope.questionInputDiv = true;
+		}else{
+			$scope.questionInputDiv = false;
+		}
+	}
+	/* FAQ Mailer Modal Window Ends */
+	
+	$('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+		$rootScope.mailSuccess = false;
+		//$('.panel-collapse.in').collapse('hide');
+		$scope.registrationStatus=[];
+		$scope.applicationStatus=[];
+		$scope.reschedulingStatus=[];
+		$scope.nsrStatus=[];
+		$scope.bgcStatus=[];
+		$scope.firstDayStatus=[];
+		$scope.saStatus=[];
+		$scope.dsStatus=[];
+		$scope.bcStatus=[];
+		$scope.$apply();
+	});
+	
+	$("#faqRegistrationModal").on("show", function () {
+	  $("body").addClass("modal-open");
+	}).on("hidden", function () {
+	  $("body").removeClass("modal-open")
+	});
+	$scope.errorMessagefaqlogin="";
+	$scope.errorShowfaqlogin=false;	
+	$scope.verifyuseridfaq = function() {	
+		
+		$scope.requestVo={};
+		$scope.requestVo.param1=$rootScope.userVO.username;
+		//$scope.RequestVO.param2=$scope.candidate.email;
+		
+	getDataBaseServices.checkDuplicateUserId({"requestVo":JSON.stringify($scope.requestVo)}).success(function(response){
+		response = angular.fromJson(atob(response));
+		if(response.param2==NextStepIndiaConstants.FAIL && response.param3=="valid Email." && response.param4 == "forfeit" && response.booleanParam1 == true){
+			
+			$rootScope.loginfaqtab=false;
+			$rootScope.otpfaqtab=true;	
+
+			$rootScope.timerOnfaq = true;
+				$rootScope.timerfaq(300);
+					  
+			$scope.errorMessagefaqlogin="";
+			$scope.errorShowfaqlogin=false;	
+			
+		}
+		else if(response.param2 == NextStepIndiaConstants.SUCCESS && response.param4 == "fruition" && response.param3=="email does not exists"  ){// && (response.param3 == $scope.shortRegFormVo.emailID)
+			$rootScope.loginfaqtab=true;
+			$rootScope.otpfaqtab=false;
+			$scope.errorMessagefaqlogin="Invalid EmailId/ReferenceId.";
+			$scope.errorShowfaqlogin=true;
+			
+				}
+	}).error(function(response){
+		$scope.errorMesssage="Some error ocurred, Please try again later.";
+		$scope.errorShow=true;
+		//checkDuplicateEmailIDValid = false;
+	});
+	
+	
+	
+	}
+	
+	
+	
+	
+	var otpTimeout;
+	$rootScope.resendloginotpbuttonfaq=true;
+	$rootScope.disableloginotpfaq=false;
+	$rootScope.disabledOTPSubmitBtnfaq=true;
+	
+	$rootScope.timerfaq = function(remaining) {
+		 $("#resendLoginLinkfaq").attr("style","cursor:not-allowed;pointer-events: none;display: none;");
+		 
+		  var m = Math.floor(remaining / 60);
+		  var s = remaining % 60;
+		  
+		  m = m < 10 ? '0' + m : m;
+		  s = s < 10 ? '0' + s : s;
+		  document.getElementById('loginTimerfaq').innerHTML = m + ':' + s;
+		  remaining -= 1;
+		  
+		  if(remaining >= 0 && $rootScope.timerOnfaq) {
+			  otpTimeout= setTimeout(function() {
+				  $rootScope.timerfaq(remaining);
+		    }, 1000);
+		    return;
+		  }
+		  else{
+		  	  $rootScope.userVO.loginOTP = "";
+			  $rootScope.disableloginotpfaq=true;
+			  $rootScope.timerOnfaq = false;
+			  $rootScope.resendloginotpbuttonfaq=true;
+			  $rootScope.disabledOTPSubmitBtnfaq=true;
+			  $("#resendLoginLinkfaq").attr("style","display: flex;");
+			  if($rootScope.timerOnfaq == false ){
+				 // appLoading.ready();
+				 
+				  $rootScope.resendloginotpbuttonfaq=true;
+				 
+					
+			  }
+			  $("#resendLoginLinkfaq").attr("style","cursor:pointer;");
+		  }
+	}
+	
+	
+	$scope.resendMailOTPfaq = function() {	
+		
+		if($rootScope.timerOnfaq==false){
+		$scope.requestVo={};
+		$scope.requestVo.param1=$rootScope.userVO.username;
+		getDataBaseServices.resendfaqOTPlogin({"requestVo":JSON.stringify($scope.requestVo)}).success(function(response){
+		
+		
+				 if(response.booleanParam1 == true){// && (response.param4 == $scope.shortRegFormVo.emailID)
+					// $rootScope.resendOTPSuccessMessage="";
+						// $rootScope.invalidLoginOTPCount = 0;
+					 $scope.errorMessagefaqlogin="OTP has been resent successfully to your email ID.";
+						$scope.errorShowfaqlogin=true;
+					  $rootScope.disableloginotpfaq=false;
+					  //$rootScope.disabledOTPSubmitBtnfaq=false;
+						 //$rootScope.resendOTPSuccessMessageFlag=true;
+						$scope.userOtp="";
+						//$scope.mailSendOTPValidlogin=true;
+					  
+//						$scope.loginTab=false;
+//						$scope.loginOTPTab=true;
+//						
+//						$rootScope.passwordTab=false;
+//						$rootScope.securityQuestTab=false;
+//						$scope.loginFormValidationArray=[];
+						$rootScope.userVO.loginOTP = "";
+//						$scope.forgotPswrdUsername="";
+//						$scope.candUnlockFlag="";
+//						$scope.candExstEmailIdPart2="";
+//						$scope.captchAns="";
+
+				$rootScope.timerOnfaq = true;
+					$rootScope.timerfaq(300);
+						  
+					}
+//					else if(response.booleanParam1 == false){
+//						$rootScope.errorMessage="Timer is running.";
+//						$rootScope.loginOTPErrorMessage1=true;
+//					}
+					else{
+//						$rootScope.errorMessage="Due to some technical reason we are unable to serve temporary password via email.";
+//						$rootScope.loginOTPErrorMessage1=true;
+						
+						 $scope.errorMessagefaqlogin="Due to some technical reason we are unable to serve temporary password via email.";
+							$scope.errorShowfaqlogin=true;
+//						mailSendOTPValid = false;
+//						window.scrollTo(0,0);
+					}
+				}).error(function(response){
+					//$rootScope.errorMessage="Due to some technical reason we are unable to serve your request.";
+					 $scope.errorMessagefaqlogin="Due to some technical reason we are unable to serve your request.";
+						$scope.errorShowfaqlogin=true;
+//					window.scrollTo(0,0);
+//					mailSendOTPValid = false;
+					//$rootScope.loginOTPErrorMessage1=true;
+				});			
+				
+	
+		}
+	}
+	
+	
+	 
+	
+	
+	$rootScope.validateOTPLoginfaq = function(){ 
+//		$rootScope.resendOTPSuccessMessage="";	
+//		$rootScope.resendOTPSuccessMessageFlag=false;
+		if($rootScope.userVO.loginOTP < 7){
+			
+			 $scope.errorMessagefaqlogin="Please Enter 7 Character OTP.";
+				$scope.errorShowfaqlogin=true;
+			$("#loginOtp").css('border','1px solid red');
+			$rootScope.disabledOTPSubmitBtnfaq = true;
+			$("#verifyLoginOTPBtnfaq").css("cursor","default");
+			$("#verifyLoginOTPBtnfaq").css("pointer-events","all !important");
+		 }
+		else if(($rootScope.userVO.loginOTP == undefined) || ($rootScope.userVO.loginOTP == "")){
+			 $scope.errorMessagefaqlogin="Please Enter 7 Character OTP.";
+				$scope.errorShowfaqlogin=true;
+			$("#loginOtp").css('border','1px solid red');
+			$rootScope.disabledOTPSubmitBtnfaq = true;
+			$("#verifyLoginOTPBtnfaq").css("cursor","not-allowed");
+			$("#verifyLoginOTPBtnfaq").css("pointer-events","all !important");
+		}else{
+			 $scope.errorMessagefaqlogin="";
+				$scope.errorShowfaqlogin=false;
+			$("#loginOtp").css('border','1px solid #d9d9d9');
+			$rootScope.disabledOTPSubmitBtnfaq = false;
+			$("#verifyLoginOTPBtnfaq").css("cursor","default");
+			$("#verifyLoginOTPBtnfaq").css("pointer-events","all !important");
+		 }
+	}
+	
+	
+	
+	$scope.verifyLogin = function(e) {
+		$rootScope.login="ncp";
+		$scope.loginFormValidationArray=[];
+		if(e===NextStepIndiaConstants.LOGIN_BY_CONTINUE){
+			$rootScope.userVO.username=$rootScope.candidateModel.candRefID;
+		}
+		$('.invalidId').css('display','none');
+		$('.invalidIdPAss').css('display','none');	
+		//var checkUsernamePatter = $rootScope.userVO.username.match(/\bDT|CT\d{11}\b/);
+		if($rootScope.userVO.username==undefined || $rootScope.userVO.username==""){
+			//$scope.loginFormValidationArray.push("Invalid format for CT Reference ID /DT Reference Id!!!");	
+			$('.loginID').css('border','1px solid #FF0B0B');
+		}else{
+			$('.loginID').css('border','1px solid #ccc');
+		}
+//		if($rootScope.userVO.password==undefined || $rootScope.userVO.password ==""){
+//			
+//			if(e==NextStepIndiaConstants.LOGIN_BY_CONTINUE){
+//				document.getElementById('errorMessageSpan1').innerHTML = "Please enter password";
+//				$('#errorModal').modal('toggle');
+//			}else{
+//				$('.loginIDPasswrd').css('border','1px solid #FF0B0B');
+//			}			
+//			//$('.invalidIdPAss').css('display','block');
+//		}
+//		else{
+//			$('.loginIDPasswrd').css('border','1px solid #ccc');
+//		} 
+		//$rootScope.userVO.password!=undefined && $rootScope.userVO.password !="" &&
+		if($rootScope.userVO.username!=undefined && $rootScope.userVO.username!=""){
+			var checkUsernamePatter = $rootScope.userVO.username.match(/\b(DT|CT)\d{11}$\b/);
+			var checkUserEmail = $rootScope.userVO.username.match(/\S+@\S+\.\S+/);
+			$('.loginID').css('border','1px solid #ccc');
+			//$('.loginIDPasswrd').css('border','1px solid #ccc');			
+			if(checkUsernamePatter!=null || checkUserEmail!=null){
+				if($scope.loginForm.$valid && 	$rootScope.timerOnfaq == true){
+					NProgress.start();
+					$('#overBody').addClass('overBackgroundFade');
+					getDataBaseServices.verifyLogin({"userVO":JSON.stringify($rootScope.userVO)}).success(function(response){
+					if(null!==response){
+//						$rootScope.loginfaqtab=false
+//						$rootScope.otpfaqtab=true;
+						;
+						if(response.message=='SUCCESS'){
+							$rootScope.timerOnfaq = false;
+							$rootScope.loginfaqtab=true;
+							$rootScope.otpfaqtab=false;
+							 $rootScope.userVO.loginOTP = "";
+							 $rootScope.userVO.username="";
+							  $rootScope.disableloginotpfaq=false;
+							$scope.errorMessagefaqlogin="";
+			$scope.errorShowfaqlogin=false;
+			
+							  $rootScope.resendloginotpbuttonfaq=false;
+							  $rootScope.disabledOTPSubmitBtnfaq=true;
+								$rootScope.disableloginotpfaq=false;
+							
+							
+							$rootScope.loginResultVO=response;
+							$rootScope.recType = $rootScope.loginResultVO.recType;
+							$rootScope.loginotpflagfaq = $rootScope.loginResultVO.loginotpflag;
+							if(e===NextStepIndiaConstants.LOGIN_BY_CONTINUE){
+								$("#errorModal").modal("hide");
+							}							
+							if($location.path()=="/campusLite"){
+								$rootScope.login="ncp";
+							}
+							if($rootScope.login=="ncp"){
+								$("#faqRegistrationModal").modal('toggle');
+								$('body').css('overflow-y','hidden');  // added fy 17
+							}
+						}
+						else if(response.message=='invalidOTP'){
+							$scope.errorMessagefaqlogin="Incorrect OTP";
+							$scope.errorShowfaqlogin=true;	
+						}
+						else{
+							if(e==NextStepIndiaConstants.LOGIN_BY_CONTINUE){
+								document.getElementById('errorMessageSpan1').innerHTML = response.message;
+								$('#errorModal').modal('toggle');
+							}else{
+								$scope.errorMessage=response.message;
+								$('.invalidId').css('display','none');
+								$('.invalidIdPAss').css('display','block');	
+							}													
+						}
+					}
+					NProgress.done();
+					$('#overBody').removeClass('overBackgroundFade');
+					});
+					}else if($scope.loginForm.$invalid && e!==NextStepIndiaConstants.LOGIN_BY_CONTINUE){
+						$('.invalidId').css('display','block');
+						$('.invalidIdPAss').css('display','none');
+					}
+				}else if(checkUsernamePatter==null && checkUserEmail==null){
+					$scope.loginFormValidationArray.push("Invalid format for CT Reference ID /DT Reference Id or Email!!!");
+				}			
+			}
+			if($scope.loginFormValidationArray.length>0){
+				 $('.invalidId').css('display','block');
+				 $('.invalidIdPAss').css('display','none');
+			}
+	};
+	
+	$('#faq_tabs').on('click', 'a[data-toggle="tab"]', function(e) {
+      e.preventDefault();
+      var $link = $(this);
+      if (!$link.parent().hasClass('active')) {
+        //remove active class from other tab-panes
+        $('.tab-content:not(.' + $link.attr('href').replace('#','') + ') .tab-pane').removeClass('active');
+        // activate tab-pane for active section
+        $('.tab-content.' + $link.attr('href').replace('#','') + ' .tab-pane:first').addClass('active');
+        if ($location.path()=="/homePage" && $link.attr('href').replace('#','')=="askMeAQuestion") {
+        	$("#tabContent").css("width", "95%");
+		}else if ($location.path()=="/homePage") {
+			$("#tabContent").css("width", "102%");
+		}
+        if ($link.attr('href')=='#ilp') {
+        	// click first submenu tab for active section
+            $('#ilp_firstDay').addClass('in active');
+            $('#ilp_firstDay_li').addClass('active');
+		} else {
+			$('#ilp_firstDay').removeClass('in active');
+			$('#ilp_firstDay_li').removeClass('active');
+			$('#ilp_serviceAgreement_li').removeClass('active');
+			$('#ilp_documentSubmission_li').removeClass('active');
+			$('#ilp_birthCertificate_li').removeClass('active');
+		}
+      }
+    });
+
+	
+	$scope.confirmQuestion = function() {
+		if (($scope.faqMailData.faqCategory == "" || 
+				$scope.faqMailData.faqCategory == null || 
+				$scope.faqMailData.faqCategory == undefined || 
+				$scope.faqMailData.faqDescription == "" || 
+				$scope.faqMailData.faqDescription == null || 
+				$scope.faqMailData.faqDescription == undefined ) && $scope.questionInputDiv == false) {
+			$scope.errorMessage="Empty mandatory fields are not allowed";
+	    	$('body').css('overflow-y','hidden');
+	    	$('body').css('overflow-x','hidden');
+			$scope.modalBtn = "OK";			
+			$('#myModal').modal('toggle');
+		}else if (($scope.faqMailData.faqCategory == "" || 
+					$scope.faqMailData.faqCategory == null || 
+					$scope.faqMailData.faqCategory == undefined || 
+					$scope.faqMailData.faqDescription == "" || 
+					$scope.faqMailData.faqDescription == null || 
+					$scope.faqMailData.faqDescription == undefined ||
+					$scope.faqMailData.faqQuestion == "" || 
+					$scope.faqMailData.faqQuestion == null || 
+					$scope.faqMailData.faqQuestion == undefined ) && $scope.questionInputDiv == true) {
+			$scope.errorMessage="Empty mandatory fields are not allowed";
+	    	$('body').css('overflow-y','hidden');
+	    	$('body').css('overflow-x','hidden');
+			$scope.modalBtn = "OK";			
+			$('#myModal').modal('toggle');
+		}else{
+			NProgress.start();
+			$('#overBody').addClass('overBackgroundFade');
+	
+			$scope.faqMailData.faqFileNames = $scope.mailAttachmentFileNames.join();
+			getDataBaseServices.sendMail({"mailVO":JSON.stringify($scope.faqMailData)}).success(function(response){
+				if (null!==response) {
+					var faqcheck=response;
+					
+					 var faqtodaycount = response;
+				     
+					 var faqtodaycount = faqtodaycount.slice(-2);
+					 var faqtodaycountsub = 15-faqtodaycount;
+					 //console.log(faqtodaycountsub);
+				     //console.log(faqtodaycount);
+				        
+				        document.getElementById("myfaqcount").innerHTML = faqtodaycountsub;
+					faqcheck = faqcheck.substring(0, faqcheck.length-2);
+					//console.log(faqcheck);
+					if (faqcheck=="SUCCESS") {
+						NProgress.done();
+						 $rootScope.userVO.loginOTP = "";
+						 $rootScope.userVO.username="";
+						  $rootScope.disableloginotpfaq=false;
+						  $rootScope.timerOnfaq = false;
+						  $rootScope.resendloginotpbuttonfaq=false;
+						  $rootScope.disabledOTPSubmitBtnfaq=true;
+							$rootScope.disableloginotpfaq=false;
+						$('#overBody').removeClass('overBackgroundFade');
+						$("#faqRegistrationModal").modal('toggle');
+						$rootScope.mailSuccess = true;
+						window.scrollTo(0,0);
+						$scope.faqMailData = {};
+						$scope.mailAttachmentFileData = [];
+						$scope.mailAttachmentFileNames = [];
+						$scope.questionInputDiv = false;
+						$('#filesDisplayDiv').css('height','');
+						$('#filesDisplayDiv').css('overflow-y','');
+						$('body').css('overflow-y','scroll');
+						$rootScope.loginfaqtab=true;
+						$rootScope.otpfaqtab=false;
+						$scope.errorShowfaqlogin=false;
+						if ($location.path()=="/postRegistration") {
+							$timeout(function() {
+						      $location.path('/homePage');
+						    }, 5000);
+						}
+					}else if (faqcheck=="FAILED") {
+						NProgress.done();
+						$('#overBody').removeClass('overBackgroundFade');
+						$("#faqRegistrationModal").modal('toggle');
+						$scope.errorMessage="Failed to send the mail";
+if(faqtodaycount>15){
+	$scope.errorMessage="Failed to send the mail.Reached daily threshold limit of 15 mails per day.Please try tomorrow.";	
+}
+				    	$('body').css('overflow-y','hidden');
+				    	$('body').css('overflow-x','hidden');
+						window.scrollTo(0,0);
+						$scope.faqMailData = {};
+						$scope.mailAttachmentFileData = [];
+						$scope.modalBtn = "OK";					
+						$('#myModal').modal('toggle');
+					}else if (response=="PROBLEM") {                   //Added for Manual PT issue
+						NProgress.done();
+						$('#overBody').removeClass('overBackgroundFade');
+						$("#faqRegistrationModal").modal('toggle');
+						$scope.errorMessage="Enter a valid Description and Question";
+				    	$('body').css('overflow-y','hidden');
+				    	$('body').css('overflow-x','hidden');
+						window.scrollTo(0,0);
+						$scope.faqMailData = {};
+						$scope.mailAttachmentFileData = [];
+						$scope.modalBtn = "OK";					
+						$('#myModal').modal('toggle');
+					}
+				}
+				$('body').css('overflow-y','scroll');
+			});
+		}
+	}
+	
+	$scope.closeModal = function() {
+		$scope.mailAttachmentFileData = [];
+		$scope.mailAttachmentFileNames = [];
+		$scope.faqMailData = {};
+		$('#filesDisplayDiv').css('height','');
+		$('#filesDisplayDiv').css('overflow-y','');
+		$('body').css('overflow-y','scroll');
+		$scope.questionInputDiv = false;
+	}
+	
+	$("#mailAttachmentUpload").click(function() {
+			 $("#fileToUploadMailAttachment").click();
+	});
+	
+	$scope.setFiles = function(element){
+		$scope.$apply(function($scope){
+			if(element.files.length!=0){
+				if($scope.faqMailData.mailAttachmentVO==undefined){
+					$scope.faqMailData.mailAttachmentVO = [];
+				}
+				if(window.FileReader){
+					var onLoadCall = 0;
+					var fileData = {};
+				    $scope.faqMailData.faqZipFileName = $rootScope.loginResultVO.candRefId+".zip";		
+				    var id = $scope.mailAttachmentFileData.length;
+					for(var index=0;index<element.files.length;index++){
+						if ($scope.totalSize < 2000) {
+							var fileUploadFileName = element.files[index].name;
+							var docxFileType  = fileUploadFileName.substring(fileUploadFileName.length-4,fileUploadFileName.length);
+							var docFileType = fileUploadFileName.substring(fileUploadFileName.length-3,fileUploadFileName.length);
+							var rtfFileType = fileUploadFileName.substring(fileUploadFileName.length-3,fileUploadFileName.length);
+							var fileScanName = $rootScope.loginResultVO.candRefId+"_"+fileData.fileName;
+							var reader = new FileReader();
+							var attachment = {}
+							var setupReader = function(file) {
+							    var name = file.name;
+							    var reader = new FileReader();  
+							    reader.onload = function(e) { 
+							    	fileData.fileName = fileUploadFileName;
+							    	$scope.mailAttachmentFileNames.push(fileData.fileName);
+							    	$scope.mailAttachmentFileData.push(fileData);
+							    	$scope.faqMailData.mailAttachmentVO[$scope.mailAttachmentFileData.length-1].stringData = event.target.result;
+							    	onLoadCall++;
+							    	getDataBaseServices.fileScanCheck({"uploadedFile":JSON.stringify(event.target.result),"fileName":fileScanName})
+										.success(function(response){
+											if(response == "SUCCESS"){
+										    	$scope.$apply();
+											}else{
+												if(response == "CURRUPT"){
+													$scope.errorMessage="File was found to be infected thus it has been discarded, request you to kindly upload a clean file.";
+													
+												}else if(response == "ERRORSCAN"){
+													$scope.errorMessage="Some error occured, Please try again later.";
+													
+												}else if(response == "FAIL"){
+													$scope.errorMessage="Due to some technical reason we are unable to serve your request, Please try again later.";
+													
+												}
+												fileData.fileName = null;
+												$scope.mailAttachmentFileNames.pop();
+												$scope.mailAttachmentFileData.pop();
+												$scope.faqMailData.mailAttachmentVO.pop();
+												//angular.element(fileToUploadMailAttachment).val(null);	
+										    	$('body').css('overflow-y','hidden');
+										    	$('body').css('overflow-x','hidden');
+												window.scrollTo(0,0); 
+												$scope.modalBtn = "OK";								
+												$('#myModal').modal('toggle');
+											} 
+											
+										}).error(function(response){
+											
+										});
+							    }
+								attachment.mailAttachmentAvaliable = true;	
+								$scope.faqMailData.mailAttachmentVO.push(attachment);
+							    reader.readAsDataURL(file);
+							}
+	
+							if(((element.files[index].size)/1024)>500){
+								attachment.fileName="";
+								attachment.stringData="";
+								$scope.errorMessage="Attachment upload file size should be less than 500KB.";
+								angular.element(fileToUploadMailAttachment).val(null);	
+						    	$('body').css('overflow-y','hidden');
+						    	$('body').css('overflow-x','hidden');
+								window.scrollTo(0,0); 
+								$scope.modalBtn = "OK";								
+								$('#myModal').modal('toggle');
+							}else if(element.id=="fileToUploadMailAttachment" && element.files[index].type!="application/pdf" && element.files[index].type!="text/plain"
+								&& element.files[index].type!="application/msword" && element.files[index].type!="application/vnd.openxmlformats-officedocument.wordprocessingml.document" 
+									&& element.files[index].type!="application/rtf" && element.files[index].type!="" && element.files[index].type!="image/png"
+										&& element.files[index].type!="image/jpg" && element.files[index].type!="image/jpeg" && element.files[index].type!="image/gif"){
+								attachment.fileName="";
+								attachment.stringData="";
+								$scope.errorMessage="Please select a file with below mentioned formats.";
+						    	$('body').css('overflow-y','hidden');
+						    	$('body').css('overflow-x','hidden');
+								window.scrollTo(0,0);
+								$scope.modalBtn = "OK";								
+								$('#myModal').modal('toggle');
+							}else if(element.id=="fileToUploadMailAttachment" && rtfFileType.toLowerCase()!="rtf"
+                            && docxFileType.toLowerCase()!="docx" && docFileType.toLowerCase()!="doc"
+                                && docxFileType.toLowerCase()!=".pdf" && docFileType.toLowerCase()!="pdf"
+                                    && docxFileType.toLowerCase()!=".txt" && docFileType.toLowerCase()!="txt"
+                                        && docxFileType.toLowerCase()!=".png" && docFileType.toLowerCase()!="png"
+                                            && docxFileType.toLowerCase()!=".jpg" && docFileType.toLowerCase()!="jpg"
+                                                && docxFileType.toLowerCase()!="jpeg" && docFileType.toLowerCase()!="jpeg"
+                                                    && docxFileType.toLowerCase()!=".gif" && docFileType.toLowerCase()!="gif"){
+								attachment.fileName="";
+								attachment.stringData="";
+								$scope.errorMessage="Please select a file with below mentioned formats.";
+						    	$('body').css('overflow-y','hidden');
+						    	$('body').css('overflow-x','hidden');
+								window.scrollTo(0,0);
+								$scope.modalBtn = "OK";								
+								$('#myModal').modal('toggle');
+							}else{
+								$scope.totalSize = $scope.totalSize + (element.files[index].size/1024);
+								fileData.size = element.files[index].size/1024;
+								reader.readAsDataURL(element.files[index]);
+								if(element.id=="fileToUploadMailAttachment"){
+									attachment.fileName="";
+									attachment.stringData="";
+									if(element.files[index].type=="application/pdf"){
+										attachment.fileName = $rootScope.loginResultVO.candRefId+"_"+(id+1)+"_MailAttachment.pdf";
+										attachment.fileFormat = ".pdf";
+										setupReader(element.files[index]);
+									}else if(element.files[index].type=="text/plain"){
+										attachment.fileName = $rootScope.loginResultVO.candRefId+"_"+(id+1)+"_MailAttachment.txt";
+										attachment.fileFormat = ".txt";
+										setupReader(element.files[index]);
+									}else if(docxFileType.toLowerCase()=="docx"){
+										attachment.fileName = $rootScope.loginResultVO.candRefId+"_"+(id+1)+"_MailAttachment.docx";
+										attachment.fileFormat = ".docx";
+										setupReader(element.files[index]);
+									}else if(docFileType.toLowerCase()=="doc"){
+										attachment.fileName = $rootScope.loginResultVO.candRefId+"_"+(id+1)+"_MailAttachment.doc";
+										attachment.fileFormat = ".doc";
+										setupReader(element.files[index]);
+									}else if(rtfFileType.toLowerCase()=="rtf"){
+										attachment.fileName = $rootScope.loginResultVO.candRefId+"_"+(id+1)+"_MailAttachment.rtf";
+										attachment.fileFormat = ".rtf";
+										setupReader(element.files[index]);
+									}
+									if(docxFileType.toLowerCase()==".png" || docFileType.toLowerCase()=="png"
+										|| docxFileType.toLowerCase()==".jpg" || docFileType.toLowerCase()=="jpg"
+											|| docxFileType.toLowerCase()=="jpeg" || docFileType.toLowerCase()=="jpeg"
+												|| docxFileType.toLowerCase()==".gif" || docFileType.toLowerCase()=="gif"){
+										attachment.fileName="";
+										var reader = new FileReader();
+									    reader.onload = $scope.imageIsLoaded;
+									    reader.readAsDataURL(element.files[index]);
+										if(docFileType.toLowerCase()=="png"){
+											attachment.fileName = $rootScope.loginResultVO.candRefId+"_"+(id+1)+"_MailAttachment.png";
+											attachment.fileFormat = ".png";
+											setupReader(element.files[index]);
+										}else if(docFileType.toLowerCase()=="jpg"){
+											attachment.fileName = $rootScope.loginResultVO.candRefId+"_"+(id+1)+"_MailAttachment.jpg";
+											attachment.fileFormat = ".jpg";		
+											setupReader(element.files[index]);
+										}else if(docxFileType.toLowerCase()=="jpeg"){
+											attachment.fileName = $rootScope.loginResultVO.candRefId+"_"+(id+1)+"_MailAttachment.jpeg";
+											attachment.fileFormat = ".jpeg";
+											setupReader(element.files[index]);
+										}else if(docFileType.toLowerCase()=="gif"){
+											attachment.fileName = $rootScope.loginResultVO.candRefId+"_"+(id+1)+"_MailAttachment.gif";
+											attachment.fileFormat = ".gif";
+											setupReader(element.files[index]);
+										}
+									}
+								}
+							}
+						}else{
+							$scope.errorMessage="Cummulative size of all files should be less than 2mb";
+							window.scrollTo(0,0);
+							$scope.modalBtn = "OK";
+					    	$('body').css('overflow-y','hidden');
+					    	$('body').css('overflow-x','hidden');
+							$('#myModal').modal('toggle');
+						}
+						if ($scope.mailAttachmentFileData.length>=3 && $location.path()!="/homePage") {
+							$('#filesDisplayDiv').css('height','75px');
+							$('#filesDisplayDiv').css('overflow-y','auto');
+						}
+					}
+				}else{
+					alert('File Reader is not avaliable.');
+				}
+			}
+		});
+	};
+	
+	$scope.imageIsLoaded = function(e){
+		$scope.stepsModel = [];
+        $scope.$apply(function() {
+            $scope.stepsModel.push(e.target.result);
+        });
+    };
+    
+    $scope.removeAttachment = function(index) {
+		$scope.totalSize = $scope.totalSize - $scope.mailAttachmentFileData[index].size;
+		$scope.mailAttachmentFileData.splice(index, 1);
+		$scope.mailAttachmentFileNames.splice(index, 1);
+		$scope.faqMailData.mailAttachmentVO.splice(index, 1);
+		if ($scope.mailAttachmentFileData.length<4) {
+			$('#filesDisplayDiv').css('height','');
+			$('#filesDisplayDiv').css('overflow-y','');
+		}
+		//$scope.$apply();
+	}
+    
+	$scope.scrollTop=function(){		
+		$("html,body").animate({scrollTop: 0}, 500);
+	};	
+	
+	$scope.closeError = function() {
+		$('body').css('overflow-y','scroll');
+	}
+	
+});	
+			
+	
+	
+//Added loginModalController for CR FY17
+candApplication.controller('loginModalController',function($scope,$rootScope,$location,getDataBaseServices,NextStepIndiaConstants/*,usSpinnerService*/){	
+	$scope.faqRegisteredCandidateFlag = false;
+	// Added by snehal for onload captcha generate
+	$(document).ready(function(){
+		$rootScope.refreshGetCaptcha();
+	});  
+	function getRandomInt(min, max) {
+  		 return Math.floor(Math.random() * (max - min + 1)) + min;
+	}
+	$scope.refreshCaptcha = function(){
+		$scope.captchText = getRandomInt(10000,99999);
+	}
+	$scope.captchText=getRandomInt(10000,99999);
+	$rootScope.loginCall=function(str){
+		$rootScope.login="";
+		$scope.forgotPswrdUsername="";		
+		if(str=="ncp"){
+			$("#loginSection").css('margin','30px 0px 0px 0px');
+			$scope.continueLogin=true;
+			$scope.continueWithoutLogin=false;
+			$rootScope.login=str;
+		}else if(str=="cc"){
+			$("#loginSection").css('margin','80px 0px 0px 0px');	
+			$scope.continueLogin=true;
+			$scope.continueWithoutLogin=true;
+			$rootScope.login=str;
+		}
+		$rootScope.userVO={};
+		$rootScope.userVO.username="";
+		//$rootScope.userVO.password="";
+		$rootScope.userVO.userCaptcha="";
+		$rootScope.userVO.loginOTP="";
+		$('#loginModal').modal('toggle');
+		$('#loginModal').modal({backdrop: 'static', keyboard: false}); 
+		$(".header").css('top','-90px');	
+		$(".modal-backdrop").css('z-index','0');
+		$rootScope.loginTab=true;
+		$rootScope.passwordTab=false;
+		$rootScope.securityQuestTab=false;
+		$rootScope.loginOTPTab=false;
+		$('.invalidId').css('display','none');
+		$('.invalidIdPAss').css('display','none');	
+		 $('body').css('overflow-y','hidden');  // added fy 17
+	};
+	
+	$rootScope.closeLogin=function(){
+		if($location.path()=="/password"){
+			window.location = lambda(document.referrer);
+		}else{
+			$('#loginModal').modal('hide');
+			$(".header").css('top','0px');
+			$(".modal-backdrop").css('z-index','1040');
+			$rootScope.userVO.username="";
+			//$rootScope.userVO.password="";
+			$rootScope.userVO.userCaptcha="";
+			$rootScope.userVO.loginOTP="";
+			$scope.continueLogin=true;
+			$scope.continueWithoutLogin=false;
+			$('body').css('overflow-y','scroll');  // added FY17
+	    	$rootScope.stopLoginOTPTimer();
+	    	$rootScope.loginTab = true;
+	    	$rootScope.loginOTPTab = false;
+	    	$rootScope.maxLimitReachedFlag = false;
+			$rootScope.disableloginotp = false;
+			$rootScope.errorMessage = "";
+			$rootScope.loginOTPErrorMessage1 = false;
+			$("#verifyLoginOTPBtn").css("cursor","default");
+			$("#verifyLoginOTPBtn").css("pointer-events","all !important");
+			$rootScope.disabledOTPSubmitBtn = false;
+			$rootScope.captchaError="";
+			$rootScope.mailSendOTPErr = "";
+			$('.invalidId').css('display','none');
+			$('.invalidCaptcha').css('display','none');
+			if($rootScope.login=="cc"){
+				$(".header").css('background-color','white');
+				$(".header").css('height','90px');
+				$(".logo").removeClass('sprite-Logo');
+				$(".logo").addClass('sprite-Color-Logo');		    	
+				$(".menuGrid > table a").addClass("blackColor");		    	
+			}
+		}		
+	};
+	
+	
+//	$rootScope.btnMailSendWithTokenLogin=function(){	
+//		
+//	}
+	
+	$rootScope.loginOTPTab=false;
+	$rootScope.errorMessage ="";
+	
+	$scope.verifyloginotpflag=false;
+	$rootScope.otpVerified = false;
+	$rootScope.userVerified = false;
+	
+	$rootScope.validateLogin=function(e){		
+		$scope.loginFormValidationArray=[];
+		if(e===NextStepIndiaConstants.LOGIN_BY_CONTINUE){
+			$rootScope.userVO.username=$rootScope.candidateModel.candRefID;
+		}
+		$('.invalidId').css('display','none');
+//		$('.invalidIdPAss').css('display','none');
+		$('.invalidCaptcha').css('display','none');	
+		//var checkUsernamePatter = $rootScope.userVO.username.match(/\bDT|CT\d{11}\b/);
+		if($rootScope.userVO.username==undefined || $rootScope.userVO.username==""){
+			//$scope.loginFormValidationArray.push("Invalid format for CT Reference ID /DT Reference Id!!!");	
+			$('.loginID').css('border','1px solid #FF0B0B');
+		}else{
+			$('.loginID').css('border','1px solid #ccc');
+		}
+//		if($rootScope.userVO.password==undefined || $rootScope.userVO.password ==""){
+//			
+//			if(e==NextStepIndiaConstants.LOGIN_BY_CONTINUE){
+//				document.getElementById('errorMessageSpan1').innerHTML = "Please enter password";
+//				$('#errorModal').modal('toggle');
+//			}else{
+//				$('.loginIDPasswrd').css('border','1px solid #FF0B0B');
+//			}			
+//			//$('.invalidIdPAss').css('display','block');
+//		}else{
+//			$('.loginIDPasswrd').css('border','1px solid #ccc');
+//		} 
+//		($rootScope.userVO.password!=undefined && $rootScope.userVO.password !="") && 
+		if(($rootScope.userVO.userCaptcha==undefined || $rootScope.userVO.userCaptcha=="")){	
+			if(e==NextStepIndiaConstants.LOGIN_BY_CONTINUE){
+				document.getElementById('errorMessageSpan1').innerHTML = "Please enter captcha";
+				$('#errorModal').modal('toggle');
+			}else{
+				$('#userCaptcha').css('border','1px solid #FF0B0B');
+			}	
+		}else{
+			$('#userCaptcha').css('border','1px solid #ccc');
+		}
+		$rootScope.captchaError = "";
+		$rootScope.showCaptchaError = true;
+		// modified by snehal to validate captcha
+//		$rootScope.userVO.password!=undefined && $rootScope.userVO.password !="" && 
+		if($rootScope.userVO.username!=undefined && $rootScope.userVO.username!="" && $rootScope.userVO.userCaptcha != undefined && $rootScope.userVO.userCaptcha != ""){
+			var checkUsernamePatter = $rootScope.userVO.username.match(/\b(DT|CT)\d{11}$\b/); //changes by parth
+			var checkUserEmail = $rootScope.userVO.username.match(/\S+@\S+\.\S+/);
+			$('.loginID').css('border','1px solid #ccc');
+//			$('.loginIDPasswrd').css('border','1px solid #ccc');
+
+			if($rootScope.userVO.userCaptcha == $rootScope.captcha){
+			if(checkUsernamePatter!=null || checkUserEmail!=null){
+				if($scope.loginForm.$valid){
+					NProgress.start();
+					$('#overBody').addClass('overBackgroundFade');
+					getDataBaseServices.validateLogin({"userVO":JSON.stringify($rootScope.userVO)}).success(function(response){
+					if(null!==response){
+						response = angular.fromJson(atob(response));
+						$rootScope.refreshGetCaptcha();
+						if(response.message=='SUCCESS'){
+							$rootScope.loginResultVO=response;
+//							$scope.faqRegisteredCandidateFlag=getDataBaseServices.getRegisterCandidateSummary();
+							$scope.faqRegisteredCandidateFlag=getDataBaseServices.getRegisterCandidateSummary();
+							$rootScope.recType = $rootScope.loginResultVO.recType;
+							 if($rootScope.loginResultVO.loginotpflag == true){// && (response.param4 == $scope.shortRegFormVo.emailID)
+									 $rootScope.errorMessage="";
+									 $scope.OTPverifiedlogin=false;
+									 $rootScope.loginOTPErrorMessage1=false;
+										$scope.userOtp="";
+										$scope.mailSendOTPValidlogin=true;
+									  
+										$rootScope.loginTab=false;
+										if(e==NextStepIndiaConstants.LOGIN_BY_CONTINUE){
+											$("#loginOTPTab").modal('show');
+										}
+										else{
+											$rootScope.loginOTPTab=true;
+										}
+										
+										$rootScope.passwordTab=false;
+										$rootScope.securityQuestTab=false;
+										$scope.loginFormValidationArray=[];
+										$rootScope.userVO.loginOTP = "";
+										$scope.forgotPswrdUsername="";
+										$scope.candUnlockFlag="";
+										$scope.candExstEmailIdPart2="";
+										$scope.captchAns="";
+
+										$rootScope.timerOn = true;
+										$rootScope.timer(300);
+									  
+								}
+								else{
+									$rootScope.mailSendOTPErr="Due to some technical reason we are unable to serve temporary password via email.";
+									$rootScope.mailSendOTPErrFlag=true;
+//										mailSendOTPValid = false;
+//										window.scrollTo(0,0);
+								}
+							}
+							else if(response.message=='Seesion_active'){
+								if(e==NextStepIndiaConstants.LOGIN_BY_CONTINUE){
+									document.getElementById('errorMessageSpan1').innerHTML = "Session already active in other tab";;
+									$('#errorModal').modal('toggle');
+								}else{
+									$rootScope.captchaError="Sorry! Request cannot be processed as a session is already active";
+									$('.invalidId').css('display','none');
+									$('.invalidIdPAss').css('display','none');
+									$('.invalidCaptcha').css('display','block');	
+								}
+								/*$location.path('/homePage');
+								if($location.path()=="/" || $location.path()=="/campusLite"){
+									$rootScope.innerHeader=false;
+									$rootScope.innerFooter=false;
+									$('.oldHeaderFooter').css('display','none');
+								}else{
+									$rootScope.innerHeader=true;
+									$rootScope.innerFooter=true;
+									$('.oldHeaderFooter').css('display','block');
+									$('body').addClass('bodyCSS');
+								}
+								$('#loginModal').modal('hide');
+								$('.modal-backdrop').remove();
+								$('body').css('overflow-y','scroll');*/
+							}
+							else if(response.message=='Invalid Captcha'){
+								if(e==NextStepIndiaConstants.LOGIN_BY_CONTINUE){
+										document.getElementById('errorMessageSpan1').innerHTML = "Invalid captcha!!!";
+										$('#errorModal').modal('toggle');
+									}else{
+										$('#captchaErrorMessage').modal('toggle');
+										$rootScope.captchaError = "Invalid captcha!!!";
+										$('.invalidCaptcha').css('display','block');	
+										$('.invalidId').css('display','none');
+										$('.invalidIdPAss').css('display','none');
+									}
+							}
+							else if(response.message == NextStepIndiaConstants.TIMER_RUNNING){
+								$rootScope.mailSendOTPErr="Timer is running.";
+								$rootScope.mailSendOTPErrFlag=true;
+							}
+							else{
+								if(e==NextStepIndiaConstants.LOGIN_BY_CONTINUE){
+									document.getElementById('errorMessageSpan1').innerHTML = response.message;
+									$('#errorModal').modal('toggle');
+								}else{
+									$rootScope.captchaError=response.message;
+									$('.invalidId').css('display','none');
+									$('.invalidIdPAss').css('display','none');	
+									$('.invalidCaptcha').css('display','block');	
+								}													
+							}
+						}
+					NProgress.done();
+					$('#overBody').removeClass('overBackgroundFade');
+					});
+					}else if($scope.loginForm.$invalid && e!==NextStepIndiaConstants.LOGIN_BY_CONTINUE){
+						$('.invalidId').css('display','block');
+						$('.invalidIdPAss').css('display','none');
+						$('.invalidCaptcha').css('display','none');
+						$rootScope.refreshGetCaptcha();
+					}
+				}else if(checkUsernamePatter==null && checkUserEmail==null){
+					$scope.loginFormValidationArray.push("Invalid format for CT Reference ID /DT Reference Id or Email!!!");
+					$rootScope.refreshGetCaptcha();
+				}
+				}
+				else{
+					if(e==NextStepIndiaConstants.LOGIN_BY_CONTINUE){
+						document.getElementById('errorMessageSpan1').innerHTML = "Invalid captcha!!!";
+						$('#errorModal').modal('toggle');
+					}else{
+						$('.invalidCaptcha').css('display','block');	
+						$('.invalidId').css('display','none');
+						$('.invalidIdPAss').css('display','none');
+						$rootScope.captchaError = "Invalid captcha!!!";
+					}
+					$rootScope.refreshGetCaptcha();
+				}			
+			}
+			if($scope.loginFormValidationArray.length>0){
+				 $('.invalidId').css('display','block');
+//				 $('.invalidIdPAss').css('display','none');
+			}
+	};
+	
+	$rootScope.loginOTPErrorMessage1=false;
+	$scope.OTPverifiedlogin=false;
+	$rootScope.invalidLoginOTPCount = 0;
+	$rootScope.invalidAttempt="";
+	$rootScope.validateLoginOTP = function(e){
+		$rootScope.resendOTPSuccessMessage="";	
+		$rootScope.resendOTPSuccessMessageFlag=false;
+		$rootScope.invalidAttempt="";
+		var loginOtp = $rootScope.userVO.loginOTP;		
+		if($rootScope.userVO.loginOTP.length != 7){
+			if(e==NextStepIndiaConstants.LOGIN_BY_CONTINUE){
+				$rootScope.postRegErrorMessage = "OTP length should be 7 characters.";
+				$rootScope.postRegErrorMessageFlag = true;
+			}
+			else{
+				$rootScope.errorMessage = "OTP length should be 7 characters.";
+				$rootScope.loginOTPErrorMessage1 = true;
+			}
+			return;
+		 }
+		if($rootScope.timerOn){
+			getDataBaseServices.verifyLoginOTP({"userVO":btoa(JSON.stringify($rootScope.userVO))}).success(function(resp){
+				resp = angular.fromJson(atob(resp));
+				var response = JSON.parse(resp.data);
+				$rootScope.loginUser = response;
+				if(resp.result == true && response.message=='SUCCESS'){
+                	$rootScope.timerOn = false;
+					clearTimeout($rootScope.otpTimeout);
+					$rootScope.errorMessage = "";
+					$rootScope.loginOTPErrorMessage1 = false;
+					$("#verifyLoginOTPBtn").css("cursor","default");
+					$("#verifyLoginOTPBtn").css("pointer-events","all !important");
+					$rootScope.disabledOTPSubmitBtn = false;
+					$rootScope.postRegErrorMessage = "";
+					$rootScope.postRegErrorMessageFlag = false;
+
+					$rootScope.otpVerified = true;
+					
+					$rootScope.loginResultVO=$rootScope.loginUser;
+					$scope.faqRegisteredCandidateFlag=getDataBaseServices.getRegisterCandidateSummary();
+					$rootScope.recType = $rootScope.loginResultVO.recType;
+					if(e===NextStepIndiaConstants.LOGIN_BY_CONTINUE){
+						$("#errorModal").modal("hide");
+						$("#loginOTPTab").modal('hide');
+					}							
+					if($location.path()=="/campusLite"){
+						$rootScope.login="ncp";
+					}
+					var referrer = document.referrer;
+					if($rootScope.login=="cc" || $rootScope.login==undefined){
+						if ($location.search().http_referer!=undefined && $location.search().http_referer=="careers"){	
+							if ($scope.faqRegisteredCandidateFlag==true) {
+								$("#faqRegistrationModal").modal('toggle');
+								$('body').css('overflow-y','hidden');  // added fy 17
+							} else {
+								$location.path('/homePage');
+								ga('send', 'event', $location.path(), 'click', 'nav-buttons');
+								if($location.path()=="/" || $location.path()=="/campusLite"){
+									$rootScope.innerHeader=false;
+									$rootScope.innerFooter=false;
+									$('.oldHeaderFooter').css('display','none');
+								}else{
+									$rootScope.innerHeader=true;
+									$rootScope.innerFooter=true;
+									$('.oldHeaderFooter').css('display','block');
+									$('body').addClass('bodyCSS');
+								}
+								$('#loginModal').modal('hide');
+								$('.modal-backdrop').remove();
+								$('body').css('overflow-y','scroll');
+							}
+							if ($scope.faqRegisteredCandidateFlag==false) {
+								$('#loginModal').modal('hide');
+								$('.modal-backdrop').remove();
+								$('body').css('overflow-y','scroll');
+							}
+						
+						}else if($rootScope.login=="cc" || (referrer!=null && referrer.indexOf("https://campuscommune.tcs.com/") != -1)){
+							$scope.requestVO = {};
+							$scope.requestVO.integerParam1 = $rootScope.loginResultVO.candId;
+							$scope.requestVO.param2 = "I";
+							getDataBaseServices.launchCampusCommune({"requestVo":JSON.stringify($scope.requestVO)}).success(function(response){
+								if(response!=null){	
+									$("#CCID").get(0).click();
+									ga('send', 'event', "CCRedirectPreLogin", 'click', 'nav-buttons');
+								}
+							});
+						}else{
+							if ($scope.faqRegisteredCandidateFlag==true) {
+								$("#faqRegistrationModal").modal('toggle');
+								$('body').css('overflow-y','hidden');  // added fy 17
+							} else {
+								$location.path('/homePage');
+								ga('send', 'event', $location.path(), 'click', 'nav-buttons');
+								if($location.path()=="/" || $location.path()=="/campusLite"){
+									$rootScope.innerHeader=false;
+									$rootScope.innerFooter=false;
+									$('.oldHeaderFooter').css('display','none');
+								}else{
+									$rootScope.innerHeader=true;
+									$rootScope.innerFooter=true;
+									$('.oldHeaderFooter').css('display','block');
+									$('body').addClass('bodyCSS');
+								}
+								$('#loginModal').modal('hide');
+								$('.modal-backdrop').remove();
+								$('body').css('overflow-y','scroll');
+							}
+							if ($scope.faqRegisteredCandidateFlag==false) {
+								$('#loginModal').modal('hide');
+								$('.modal-backdrop').remove();
+								$('body').css('overflow-y','scroll');
+							}
+						}
+					}else if($rootScope.login=="ncp" ){
+						if($location.search().http_referer!=undefined && $location.search().http_referer=="careers"){
+							$scope.requestVO = {};
+							$scope.requestVO.integerParam1 = $rootScope.loginResultVO.candId;
+							if($location.search().url==undefined){
+								$scope.requestVO.param1 = "";
+							}
+							else{
+								$scope.requestVO.param1= $location.search().url;
+							}
+							getDataBaseServices.iONRedirect({"requestVO":JSON.stringify($scope.requestVO)}).success(function(response){
+								if(response!=null){
+									if(response.param1!=null){
+										location.href = response.param1;
+									}
+								}
+							}).error(function(response){
+	
+							});
+						}else{
+							if ($scope.faqRegisteredCandidateFlag==true) {
+								$("#faqRegistrationModal").modal('toggle');
+								$('body').css('overflow-y','hidden');  // added fy 17
+							} else {
+								$location.path('/homePage');
+								ga('send', 'event', $location.path(), 'click', 'nav-buttons');
+								if($location.path()=="/" || $location.path()=="/campusLite"){
+									$rootScope.innerHeader=false;
+									$rootScope.innerFooter=false;
+									$('.oldHeaderFooter').css('display','none');
+								}else{
+									$rootScope.innerHeader=true;
+									$rootScope.innerFooter=true;
+									$('.oldHeaderFooter').css('display','block');
+									$('body').addClass('bodyCSS');
+								}
+								$('#loginModal').modal('hide');
+								$('.modal-backdrop').remove();
+								$('body').css('overflow-y','scroll');
+							}
+							if ($scope.faqRegisteredCandidateFlag==false) {
+								$('#loginModal').modal('hide');
+								$('.modal-backdrop').remove();
+								$('body').css('overflow-y','scroll');
+							}
+						}	
+					}
+				}
+				else if(resp.result == false && response.param1 == NextStepIndiaConstants.FAIL){
+					$rootScope.invalidLoginOTPCount += 1;
+//					if($rootScope.invalidLoginOTPCount == 1 || $rootScope.invalidLoginOTPCount == 2){
+					if(response.param2 == NextStepIndiaConstants.INVALID_OTP_1){
+						if(e==NextStepIndiaConstants.LOGIN_BY_CONTINUE){
+							$("#loginOTPTab").modal('show');
+//							$rootScope.loginOTPTab = true;
+							$rootScope.maxLimitReachedFlag = false;
+							$rootScope.disableloginotp = false;
+							$rootScope.postRegErrorMessage = resp.message;
+							$rootScope.postRegErrorMessageFlag = true;
+							$("#verifyLoginOTPBtn").css("cursor","default");
+							$("#verifyLoginOTPBtn").css("pointer-events","all !important");
+							$rootScope.disabledOTPSubmitBtn = false;
+//							document.getElementById('errorMessageSpan1').innerHTML = $rootScope.errorMessage;
+//							$('#errorModal').modal('toggle');
+						}else{
+							$rootScope.maxLimitReachedFlag = false;
+							$rootScope.disableloginotp = false;
+							$rootScope.errorMessage = resp.message;
+							$rootScope.loginOTPErrorMessage1 = true;
+							$("#verifyLoginOTPBtn").css("cursor","default");
+							$("#verifyLoginOTPBtn").css("pointer-events","all !important");
+							$rootScope.disabledOTPSubmitBtn = false;
+						}
+					}else if(response.param2 == NextStepIndiaConstants.THIRD_INVALID_LOGIN || response.param2 == NextStepIndiaConstants.FIFTH_INVALID_LOGIN){
+						if(e==NextStepIndiaConstants.LOGIN_BY_CONTINUE){
+							$rootScope.maxLimitReachedFlag = true;
+							$rootScope.disableloginotp = true;
+							$rootScope.postRegErrorMessage = resp.message;
+							$rootScope.postRegErrorMessageFlag = true;
+							$("#verifyLoginOTPBtn").css("cursor","not-allowed");
+							$("#verifyLoginOTPBtn").css("pointer-events","all !important");
+							$rootScope.disabledOTPSubmitBtn = true;
+							$rootScope.timerOn = false;
+			            	clearTimeout($rootScope.otpTimeout);
+			            	$rootScope.invalidAttempt = response.param2;
+						}else{
+							$rootScope.maxLimitReachedFlag = true;
+							$rootScope.disableloginotp = true;
+							$rootScope.errorMessage = resp.message;
+							$rootScope.loginOTPErrorMessage1 = true;
+							$("#verifyLoginOTPBtn").css("cursor","not-allowed");
+							$("#verifyLoginOTPBtn").css("pointer-events","all !important");
+							$rootScope.disabledOTPSubmitBtn = true;
+							$rootScope.timerOn = false;
+			            	clearTimeout($rootScope.otpTimeout);
+			            	$rootScope.invalidAttempt = response.param2;
+						}
+					}else{
+						if(e==NextStepIndiaConstants.LOGIN_BY_CONTINUE){
+							$("#loginOTPTab").modal('show');
+//							$rootScope.loginOTPTab = true;
+							$rootScope.maxLimitReachedFlag = false;
+							$rootScope.disableloginotp = false;
+							$rootScope.postRegErrorMessage = "Invalid OTP.";
+							$rootScope.postRegErrorMessageFlag = true;
+							$("#verifyLoginOTPBtn").css("cursor","default");
+							$("#verifyLoginOTPBtn").css("pointer-events","all !important");
+							$rootScope.disabledOTPSubmitBtn = false;
+							document.getElementById('errorMessageSpan1').innerHTML = $rootScope.errorMessage;
+							$('#errorModal').modal('toggle');
+						}else{
+							$rootScope.maxLimitReachedFlag = false;
+							$rootScope.disableloginotp = false;
+							$rootScope.errorMessage = "Invalid OTP.";
+							$rootScope.loginOTPErrorMessage1 = true;
+							$("#verifyLoginOTPBtn").css("cursor","default");
+							$("#verifyLoginOTPBtn").css("pointer-events","all !important");
+							$rootScope.disabledOTPSubmitBtn = false;
+						}
+					}					
+				}
+				else if(resp.result == false && response.param1=='OTP_EXPIRED'){
+					if(e==NextStepIndiaConstants.LOGIN_BY_CONTINUE){
+						$("#loginOTPTab").modal('show');
+						$rootScope.postRegErrorMessage = resp.message;
+						$rootScope.postRegErrorMessageFlag = true;
+//						$rootScope.errorMessage = resp.message;
+//						$rootScope.loginOTPErrorMessage1 = true;
+						$("#verifyLoginOTPBtn").css("cursor","default");
+						$("#verifyLoginOTPBtn").css("pointer-events","all !important");
+						$rootScope.disabledOTPSubmitBtn = false;
+					}else{
+						$rootScope.errorMessage = resp.message;
+						$rootScope.loginOTPErrorMessage1 = true;
+						$("#verifyLoginOTPBtn").css("cursor","default");
+						$("#verifyLoginOTPBtn").css("pointer-events","all !important");
+						$rootScope.disabledOTPSubmitBtn = false;
+					}
+				}
+				else if(resp.result == false && response.param1=='OTP_INVALID'){
+					if(e==NextStepIndiaConstants.LOGIN_BY_CONTINUE){
+						$rootScope.postRegErrorMessage = response.message;
+						$rootScope.postRegErrorMessageFlag = true;
+						$("#verifyLoginOTPBtn").css("cursor","default");
+						$("#verifyLoginOTPBtn").css("pointer-events","all !important");
+						$rootScope.disabledOTPSubmitBtn = false;
+					}else{
+						$rootScope.errorMessage = response.message;
+						$rootScope.loginOTPErrorMessage1 = true;
+						$("#verifyLoginOTPBtn").css("cursor","default");
+						$("#verifyLoginOTPBtn").css("pointer-events","all !important");
+						$rootScope.disabledOTPSubmitBtn = false;
+					}
+				}
+				else{
+					if(e==NextStepIndiaConstants.LOGIN_BY_CONTINUE){
+						$rootScope.postRegErrorMessage = response.message;
+						$rootScope.postRegErrorMessageFlag = true;
+					}
+					else{
+						$rootScope.loginOTPErrorMessage1 = true;
+						$rootScope.errorMessage = response.message;//"Failed to login";
+					}
+					$rootScope.disabledOTPSubmitBtn = false;
+					$("#verifyLoginOTPBtn").css("cursor","default");
+					$("#verifyLoginOTPBtn").css("pointer-events","all !important");
+				}
+			}).error(function(response){
+				$rootScope.errorMessage = "Due to some technical reason we are unable to serve your request.";
+				$rootScope.loginOTPErrorMessage1 = true;
+				$("#verifyLoginOTPBtn").css("cursor","default");
+				$("#verifyLoginOTPBtn").css("pointer-events","all !important");
+				$rootScope.disabledOTPSubmitBtn = false;
+			});
+		}
+		else if(!$rootScope.timerOn && (($rootScope.userVO.loginOTP == 'undefined') || ($rootScope.userVO.loginOTP == ""))){
+			$rootScope.errorMessage = "Enter OTP.";
+			$rootScope.loginOTPErrorMessage1 = true;
+			$("#verifyLoginOTPBtn").css("cursor","default");
+			$("#verifyLoginOTPBtn").css("pointer-events","all !important");
+			$rootScope.disabledOTPSubmitBtn = false;
+		 }
+		 else{
+			 $rootScope.errorMessage = "OTP Expired.";
+			$rootScope.loginOTPErrorMessage1 = true;
+			$("#verifyLoginOTPBtn").css("cursor","default");
+			$("#verifyLoginOTPBtn").css("pointer-events","all !important");
+			$rootScope.disabledOTPSubmitBtn = false;
+		 }
+	}
+	
+	$rootScope.otpTimeout;
+	$rootScope.timerOn = false;
+	$rootScope.resendloginotpbutton=true;
+	$rootScope.disableloginotp=false;
+	$rootScope.timer = function(remaining) {
+		 $("#resendLoginLink").attr("style","cursor:not-allowed;pointer-events: none;display: none;");
+		 
+		  var m = Math.floor(remaining / 60);
+		  var s = remaining % 60;
+		  
+		  m = m < 10 ? '0' + m : m;
+		  s = s < 10 ? '0' + s : s;
+		  document.getElementById('loginTimer').innerHTML = m + ':' + s;
+		  remaining -= 1;
+		  
+		  if(remaining >= 0 && $rootScope.timerOn) {
+			  $rootScope.otpTimeout = setTimeout(function() {
+				  $rootScope.timer(remaining);
+		    }, 1000);
+		    return;
+		  }
+		  else{
+		  	  $rootScope.userVO.loginOTP = "";
+			  $rootScope.disableloginotp=true;
+			  $rootScope.timerOn = false;
+			  $rootScope.resendloginotpbutton=true;
+			  $("#resendLoginLink").attr("style","display: flex;");
+			  if($rootScope.timerOn == false ){
+				 // appLoading.ready();
+				 
+				  $rootScope.resendloginotpbutton=true;
+				 
+					
+			  }
+			  $("#resendLoginLink").attr("style","cursor:pointer;");
+		  }
+	}
+	
+	$rootScope.validateOTPLogin = function(){ 
+		$rootScope.resendOTPSuccessMessage="";	
+		$rootScope.resendOTPSuccessMessageFlag=false;
+		if($rootScope.userVO.loginOTP < 7){
+			$rootScope.loginOTPErrorMessage1 = true;
+			$rootScope.errorMessage="Please Enter 7 Characters OTP.";
+			$("#loginOtp").css('border','1px solid red');
+			$rootScope.disabledOTPSubmitBtn = false;
+			$("#verifyLoginOTPBtn").css("cursor","default");
+			$("#verifyLoginOTPBtn").css("pointer-events","all !important");
+		 }
+		else if(($rootScope.userVO.loginOTP == undefined) || ($rootScope.userVO.loginOTP == "")){
+			$rootScope.loginOTPErrorMessage1 = true;
+			$rootScope.errorMessage="Please Enter 7 Character OTP.";
+			$("#loginOtp").css('border','1px solid red');
+			$rootScope.disabledOTPSubmitBtn = true;
+			$("#verifyLoginOTPBtn").css("cursor","not-allowed");
+			$("#verifyLoginOTPBtn").css("pointer-events","all !important");
+		}else{
+			$rootScope.loginOTPErrorMessage1 = false;
+			$rootScope.errorMessage="";
+			$("#loginOtp").css('border','1px solid #d9d9d9');
+			$rootScope.disabledOTPSubmitBtn = false;
+			$("#verifyLoginOTPBtn").css("cursor","default");
+			$("#verifyLoginOTPBtn").css("pointer-events","all !important");
+		 }
+	}
+	
+	$rootScope.redirectToHomePage = function(){
+		window.location = "/campus";
+	}
+	
+	$rootScope.stopLoginOTPTimer = function(){
+		$rootScope.requestVO = {};  
+        getDataBaseServices.stopLoginTimer($rootScope.requestVO).success(function(response){
+        	response = angular.fromJson(atob(response));
+            if(response.param1 == NextStepIndiaConstants.SUCCESS){
+            	$rootScope.timerOn = false;
+            	clearTimeout($rootScope.otpTimeout);
+  			  	$("#resendLoginLink").attr("style","cursor:pointer;");
+            	$rootScope.errorMessage = "";
+            	$rootScope.loginOTPErrorMessage1 = false;  
+            }
+            else{
+            	$rootScope.errorMessage = "Failed to stop timer.";
+            	$rootScope.loginOTPErrorMessage1 = true;
+            }
+        });
+
+    }
+	
+	$rootScope.resendMailOTPlogin = function(){
+		
+		if($rootScope.invalidAttempt == NextStepIndiaConstants.THIRD_INVALID_LOGIN || $rootScope.invalidAttempt == NextStepIndiaConstants.FIFTH_INVALID_LOGIN){
+			return false;
+		}
+		if(!$rootScope.timerOn){
+			$rootScope.errorMessage="";
+			$rootScope.loginOTPErrorMessage1 = false;
+			$rootScope.postRegErrorMessage = "";
+			$rootScope.postRegErrorMessageFlag = false;
+			
+			if($rootScope.maxLimitReachedFlag){
+			  	$rootScope.maxLimitReachedFlag = false;
+				$rootScope.disableloginotp = false;
+				$rootScope.errorMessage = "";
+			    $rootScope.loginOTPErrorMessage1 = false;
+				$rootScope.postRegErrorMessage = "";
+				$rootScope.postRegErrorMessageFlag = false;
+				$("#verifyLoginOTPBtn").css("cursor","default");
+				$("#verifyLoginOTPBtn").css("pointer-events","all !important");
+				$rootScope.disabledOTPSubmitBtn = false;
+			}
+			$rootScope.disableloginotp=false;
+			
+			$scope.requestVO = {};						
+			
+			getDataBaseServices.mailSendOTPlogin({'requestVo':JSON.stringify($scope.requestVO)}).success(function(response){
+				
+			 if(response.booleanParam1 == true){// && (response.param4 == $scope.shortRegFormVo.emailID)
+					 $rootScope.invalidLoginOTPCount = 0;
+					 $rootScope.resendOTPSuccessMessage="OTP has been resent successfully to your email ID.";	
+					 $rootScope.resendOTPSuccessMessageFlag=true;
+					$scope.userOtp="";
+					$scope.mailSendOTPValidlogin=true;
+				  
+					$rootScope.loginTab=false;
+					$rootScope.loginOTPTab=true;
+					
+					$rootScope.passwordTab=false;
+					$rootScope.securityQuestTab=false;
+					$scope.loginFormValidationArray=[];
+					$rootScope.userVO.loginOTP = "";
+					$scope.forgotPswrdUsername="";
+					$scope.candUnlockFlag="";
+					$scope.candExstEmailIdPart2="";
+					$scope.captchAns="";
+
+					$rootScope.timerOn = true;
+					$rootScope.timer(300);
+					  
+				}
+				else if(response.booleanParam1 == false && response.param1 == NextStepIndiaConstants.TIMER_RUNNING){
+					$rootScope.errorMessage="Timer is running.";
+					$rootScope.loginOTPErrorMessage1=true;
+				}
+				else if(response.booleanParam1 == false && response.param1 == NextStepIndiaConstants.THIRD_INVALID_LOGIN){
+					$rootScope.maxLimitReachedFlag = true;
+					$rootScope.disableloginotp = true;
+					$rootScope.errorMessage=response.param2;
+					$rootScope.loginOTPErrorMessage1=true;
+					$("#verifyLoginOTPBtn").css("cursor","not-allowed");
+					$("#verifyLoginOTPBtn").css("pointer-events","all !important");
+					$rootScope.disabledOTPSubmitBtn = true;
+					$rootScope.timerOn = false;
+	            	clearTimeout($rootScope.otpTimeout);
+	            	$rootScope.invalidAttempt = response.param2;
+	            	$("#resendLoginLink").attr("style","cursor:not-allowed;pointer-events: none;display: none;");
+				}
+				else if(response.booleanParam1 == false && response.param1 == NextStepIndiaConstants.FIFTH_INVALID_LOGIN){
+					$rootScope.maxLimitReachedFlag = true;
+					$rootScope.disableloginotp = true;
+					$rootScope.errorMessage=response.param2;
+					$rootScope.loginOTPErrorMessage1=true;
+					$("#verifyLoginOTPBtn").css("cursor","not-allowed");
+					$("#verifyLoginOTPBtn").css("pointer-events","all !important");
+					$rootScope.disabledOTPSubmitBtn = true;
+					$rootScope.timerOn = false;
+	            	clearTimeout($rootScope.otpTimeout);
+	            	$rootScope.invalidAttempt = response.param2;
+	            	$("#resendLoginLink").attr("style","cursor:not-allowed;pointer-events: none;display: none;");
+				}
+				else{
+					$rootScope.errorMessage="Due to some technical reason we are unable to serve temporary password via email.";
+					$rootScope.loginOTPErrorMessage1=true;
+//					mailSendOTPValid = false;
+//					window.scrollTo(0,0);
+				}
+			}).error(function(response){
+				$rootScope.errorMessage="Due to some technical reason we are unable to serve your request.";
+//				window.scrollTo(0,0);
+//				mailSendOTPValid = false;
+				$rootScope.loginOTPErrorMessage1=true;
+			});	
+		}		
+	}
+	
+	$scope.forgotPassword=function(){
+		$rootScope.loginTab=false;
+		$rootScope.passwordTab=true;
+		$rootScope.securityQuestTab=false;
+		$scope.loginFormValidationArray=[];
+		$scope.forgotPswrdUsername="";
+		$scope.candUnlockFlag="";
+		$scope.candExstEmailIdPart2="";
+		$scope.captchAns="";
+	};
+	$scope.cancelPasswordTab=function(){
+		if($location.path()=="/password"){
+			window.location = lambda(document.referrer);
+		}else{
+			$rootScope.loginTab=true;
+			$rootScope.passwordTab=false;
+			$rootScope.securityQuestTab=false;
+			$rootScope.submitHide=false;
+			$scope.forgotPswrdUsername="";
+			$scope.loginFormValidationArray=[];
+			$scope.candUnlockFlag="";
+			$scope.candExstEmailIdPart2="";
+			$('.invalidId').css('display','none');
+			$('.invalidIdPAss').css('display','none');
+			$(".modal-content .passwordTab>div:first-child").css('margin','100px 0px 0px 0px');
+		}		
+	};
+	$scope.btnForgotPasswordClick = function(){
+    	$location.path("/forgotPassword");
+    };
+    
+    $scope.resetPasswordValidation = function() {
+    	let result = 0;
+    	if ($scope.candExstEmailIdPart2 == undefined || $scope.candExstEmailIdPart2 == '') {
+    		result++;
+		}
+    	if ($scope.captchAns == undefined || $scope.captchAns == ""){
+    		result++;
+    	}
+    	/*if ($scope.accountLockStatus=='Y' && ($scope.candUnlockFlag == undefined || $scope.candUnlockFlag == '')) {
+    		result++;
+		}*/
+		return result;
+	}
+    
+//	$scope.forgotPwdSubmit = function(){
+//		if($rootScope.securityQuestTab){
+//			let valResult = $scope.resetPasswordValidation();
+//			if (valResult > 0) {
+//				$('.invAns').css('display','block');
+//				$('.invAns').css('color','#FF0101');
+//				$('.invAns').css('margin-bottom','10px');
+//				$scope.errorMessage="Please fill all the details !";
+//				$scope.refreshCaptcha();
+//			}else {
+//				if($scope.captchAns == $scope.captchText){
+//					$scope.submitForgotPassword();
+//				}else {
+//					$('.invAns').css('display','block');
+//					$('.invAns').css('color','#FF0101');
+//					$('.invAns').css('margin-bottom','10px');
+//					$scope.errorMessage="Please fill correct capcha !";
+//					$scope.refreshCaptcha();					
+//				}
+//			}
+//		}else{
+//			$scope.fetchSecQues();
+//		}
+//	};
+	$scope.fetchSecQues = function(){		
+		$scope.loginFormValidationArray=[];
+		$scope.requestVO = {};
+		$scope.requestVO.param1 = "fetchSecQues";
+		$scope.requestVO.param2 = $scope.forgotPswrdUsername;
+		if($scope.requestVO.param2==undefined || $scope.requestVO.param2==""){
+			//$scope.loginFormValidationArray.push("Invalid format for CT Reference ID /DT Reference Id!!!");	
+			$('.txtUserName').css('border','1px solid #FF0B0B');
+		}else if($scope.requestVO.param2!=undefined && $scope.requestVO.param2!=""){
+			var checkUsernamePatter = $scope.requestVO.param2.match(/\b(DT|CT)\d{11}$\b/);	
+			//var checkUserEmail = $scope.requestVO.param2.match(/\S+@\S+\.\S+/);
+			if(checkUsernamePatter!=null){
+				if($scope.forgotPasswordForm.$valid){
+					$('.forgotId').css('display','none');
+					$('.txtUserName').css('border','1px solid #ccc');
+					NProgress.start();
+					getDataBaseServices.fetchSecQuest({"requestVo":JSON.stringify($scope.requestVO)}).success(function(response){			
+						if(response!=null){
+							response = angular.fromJson(atob(response));
+							if(response.param1==NextStepIndiaConstants.SUCCESS){
+								 $scope.accountLockStatus = response.param2;
+								 $scope.candExstEmailIdPart1 = response.param3;
+								 $scope.candExstEmailIdPart3 = response.param4;
+								 $rootScope.securityQuestTab=true;
+								 $scope.forgotPswrdSecAnswer="";
+								 $('.invAns').css('display','none');
+								 $(".modal-content .passwordTab>div:first-child").css('margin','70px 0px 0px 0px');	
+								 $(".passwordTab>div:first-child").css('margin','50px 0px 0px 0px');
+							}else{
+								if(checkUsernamePatter!=null || checkUsernamePatter.includes("CT") || checkUsernamePatter.includes("DT")){
+									$scope.loginFormValidationArray.push("Invalid format for CT Reference ID /DT Reference Id!!!");
+								}else{
+									$scope.loginFormValidationArray.push("Please enter the correct details");
+								}
+								$('.forgotId').css('display','block');
+							}							
+						}	
+						NProgress.done();
+					});
+				}
+			}else{
+				$scope.loginFormValidationArray.push("Invalid format for CT Reference ID /DT Reference Id!!!");
+				$('.forgotId').css('display','block');
+			}
+		}
+	};
+	
+	$scope.submitForgotPassword=function(){
+		$scope.errorMessage="";
+		$scope.requestVO = {};
+		$scope.requestVO.param1 = "forgotPassword";
+		$scope.requestVO.param2 = $scope.forgotPswrdUsername;
+		$scope.requestVO.param3 = NextStepIndiaConstants.India;
+		//$scope.requestVO.param4 = $scope.forgotPswrdSecAnswer;
+		if ($scope.candExstEmailIdPart2!=undefined && $scope.candExstEmailIdPart3!=undefined) {
+			if ($scope.candExstEmailIdPart1!=undefined) {
+				$scope.requestVO.param4 = $scope.candExstEmailIdPart1+$scope.candExstEmailIdPart2+$scope.candExstEmailIdPart3;
+			} else {
+				$scope.requestVO.param4 = $scope.candExstEmailIdPart2+$scope.candExstEmailIdPart3;
+			}
+		}
+		if ($scope.candUnlockFlag!=undefined && $scope.candUnlockFlag!='') {
+			$scope.requestVO.param5 = $scope.candUnlockFlag;
+		}else {
+			$scope.requestVO.param5 = 'R';
+		}
+		//$scope.requestVO.param5 = window.location.protocol+'//'+window.location.host+'/campus';
+		NProgress.start();
+		getDataBaseServices.forgotPasswordSubmit({"requestVo":JSON.stringify($scope.requestVO)}).success(function(response){
+			if(null != response){
+				response = angular.fromJson(atob(response));
+				if(response.param1=="SUCCESS"){	
+					$rootScope.securityQuestTab=false;
+					$(".modal-content .passwordTab>div:first-child").css('margin','100px 0px 0px 0px');	
+					$(".passwordTab>div:first-child").css('margin','100px 0px 0px 0px');
+					$('.forgotId').css('display','block');	
+					$('.forgotId').css('color','#2d7302');
+					$scope.loginFormValidationArray[0]="Link to reset your password has been mailed to your email Id Mentioned at the time of registration";	
+					$scope.candUnlockFlag="";
+					$scope.candExstEmailIdPart2="";				
+				}else{
+					$('.invAns').css('display','block');	
+					$('.invAns').css('color','#FF0101');
+					$('.invAns').css('margin-bottom','10px');
+					$scope.errorMessage=response.param2;
+				}
+			}
+			NProgress.done();
+		});
+	};
+	
+	// added by snehal and rameshwar for captcha changes	
+	$rootScope.onLoginCaptchaChanged = function(){
+		$rootScope.captchaError = "";   
+		if($rootScope.userVO.userCaptcha != $rootScope.captcha){
+			$("#userCaptcha").css('border','1px solid red');
+		}
+		else{
+			$("#userCaptcha").css('border','1px solid #d9d9d9');
+		}
+	}
+	
+	$rootScope.captchatempt = 1;
+    $rootScope.refreshGetCaptcha = function(){
+        $scope.requestVO = {};  
+        $rootScope.captchatempt = $rootScope.captchatempt + 1;
+            getDataBaseServices.refreshGetCapt($rootScope.captchatempt).success(function(response){
+                if(null!==response){
+                    if(response.booleanParam1){
+                        $rootScope.captcha = response.param1;
+//                        $rootScope.captchaError = "";                  
+                    }
+                    else{
+                        $('#captchaErrorMessage').modal('toggle');
+                        $rootScope.captchaError = "Error while generating captcha.";
+                        $('.invalidCaptcha').css('display','block');  
+                        $('.invalidId').css('display','none');
+                        $('.invalidIdPAss').css('display','none');
+                    }
+                }
+                else{
+                    $('#captchaErrorMessage').modal('toggle');
+                    $rootScope.captchaError = "Due to some technical reason we are unable to serve your request.";
+                    $('.invalidCaptcha').css('display','block');  
+                    $('.invalidId').css('display','none');
+                    $('.invalidIdPAss').css('display','none');
+                }
+            });
+
+    }
+    // end of captcha changes
+		
+
+
+});
+
+candApplication.controller('homePageController',function($scope,$rootScope,$location,getDataBaseServices,NextStepIndiaConstants/*,usSpinnerService*/){
+	$rootScope.buildNumber = "";
+	$scope.load=false;
+	$('body').css('overflow-y','scroll');
+	ga('send', 'event', $location.path(), 'click', 'nav-buttons');
+	if($location.path()=="/" || $location.path()=="/campusLite" || $location.path()=="/password"){
+		$rootScope.innerHeader=false;
+		$rootScope.innerFooter=false;
+		$('body').removeClass('bodyCSS');
+		var visit=GetCookie("ZZZZZ");
+		if (visit==null){
+		   //alert("Your Message Goes here and you only get to see it once!");
+		   if($location.search().http_referer==undefined){
+				$(".headerMsg").css('display','block');
+		   }
+		   var expire=new Date();
+		   expire=new Date(expire.getTime()+7776000000);
+		   document.cookie="ZZZZZ=here; expires="+expire;
+		}
+		function GetCookie(name) {
+		  var arg=name+"=";
+		  var alen=arg.length;
+		  var clen=document.cookie.length;
+		  var i=0;
+		  while (i<clen) {
+		    var j=i+alen;
+		    if (document.cookie.substring(i,j)==arg)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
+		      return "here";
+		    i=document.cookie.indexOf(" ",i)+1;
+		    if (i==0) break;
+		  }
+		  return null;
+		}		
+	}else if($location.path()=="/mainHome" ){ //added for CR fy 17
+		//$location.path("/mainHome");
+		//$('.oldHeaderFooter').css('display','block');
+		$rootScope.innerHeader=false;
+		$rootScope.innerFooter=false;
+		$('body').removeClass('bodyCSS');
+		$('body').removeClass('modal-open');
+		//$("#colorLogo").removeClass('sprite-Logo');
+    	$("#colorLogo").addClass('sprite-Color-LogoReg');
+	}else{
+		$rootScope.innerHeader=true;
+		$rootScope.innerFooter=true;
+		$('body').addClass('bodyCSS');
+	}
+	
+	if($location.path()!="/" || $location.path()!="/campusLite"){
+		$('.oldHeaderFooter').css('display','block');
+	}
+	$scope.randomText=[];
+	function makeid()
+	{
+	    var text = "";
+	    var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+	    for( var i=0; i < 5; i++ ){
+	    	 text = possible.charAt(Math.floor(Math.random() * possible.length));
+	    	 //$scope.randomText[i].letter=text;
+	    	 $scope.randomText.push({'letter':text});
+	    }
+	    return text;
+	}
+	makeid();
+	$rootScope.loginTab=true;
+	$rootScope.passwordTab=false;
+	$rootScope.securityQuestTab=false;
+	$rootScope.showRegister=false;
+	$scope.continueLogin=true;
+	$scope.continueWithoutLogin=false;	
+	$scope.forgotPswrdSecAnswer="";	
+	$scope.forgotPswrdUsername="";	
+	$scope.loginFormValidationArray=[];
+	$scope.hoverDiv = function(e){
+		   var tar=$("#"+e);
+	    	     $("#"+e+" #arrow").css('left','85%'); 
+	             $("#"+e+" .loadText").css('opacity','0.8'); 
+	             $("#"+e+" #whiteArrow").css('left','85%'); 
+	             $("#"+e+" .upDiv").css('visibility','visible'); 
+	             $("#"+e+" .upDiv").css('background-color','rgba(245, 240, 240, 0.41)'); 
+	             $("#"+e+" #lowDiv").css('text-decoration','none'); 
+	       if(e=='bigNewsCard'){
+	    	   $("#newsArrow").css('left','93%'); 
+	           $("#bigNewsCard").css('opacity','0.8'); 
+	       }	            
+	   	   $(tar).mouseout(function(){
+	   		   	$("#"+e+" #arrow").css('left','75%'); 
+	   			$("#"+e+" #whiteArrow").css('left','75%'); 
+	   			$("#"+e+" .loadText").css('opacity','1'); 
+	            $("#"+e+" .upDiv").css('background-color','rgba(245, 240, 240, 0)'); 
+	       });
+	   	 $('#bigNewsCard').mouseout(function(){
+	   		$("#newsArrow").css('left','80%'); 
+	   		$("#bigNewsCard").css('opacity','1'); 
+	   	 });
+	   
+	    };
+
+    $scope.closeHeaderBar= function(){
+    	$(".headerMsg").css('top','-50px');
+    };
+    
+	$(document).ready(function(){
+		//since on login page clearing login details 
+		$rootScope.loginResultVO=undefined;
+		 //$('[data-toggle="tooltip"]').tooltip();  
+		//$('.parallax-window').parallax({imageSrc: '/campus/pages/images/Office.jpg'});
+	    //$('#imgIT').tooltip({title: "Tata Consultancy Services (TCS) is an IT services, business solutions and outsourcing organisation that delivers real results to global businesses ensuring a level of certainty no other firm can match.\n\nTCS offers a consulting-led, integrated portfolio of IT and IT-enabled services (ITeS) delivered through its unique Global Network Delivery Model  (GNDM), which is recognized as the benchmark of excellence in software development.TCS IT services span across Application Development, Maintenance and Modernisation, System Integration and Performance Engineering.",placement: "top"}); 
+	   // $('#imgBPS').tooltip({title:"We, at Tata Consultancy Services (TCS) BPS, offer a large pool of industry domain experts. We offer horizontal services for Finance and Accounting, Human Resources, Procurement & Analytics, across industries ranging from, banking and financial service, insurance services, drug development and safety services, retail services, telecom services, travel-related services, manufacturing services and knowledge services.We offer global exposure and an unparalleled career growth. So, come and explore opportunities and experience certainty with us at TCS."});
+	    $(window).on('scroll', function () {
+			var width=$(window).width();
+		    var scrollTop = $(window).scrollTop();
+		    if(scrollTop >396){
+		    	$(".registerHereCol").css('visibility','visible');	
+		    	$(".registerHereCol").removeClass('display');
+		    }else{
+		    	if ($location.path()!="/helpAndSupport") {
+			    	$(".registerHereCol").css('visibility','hidden');
+			    	$(".registerHereCol").addClass('display');
+		    	}
+		    }
+	    });
+	    var lastScrollTop = 0;
+	    $(window).scroll(function(event){
+	       var st = $(this).scrollTop();	       
+	       if (st > lastScrollTop || lastScrollTop==0){	 
+	    	   $(".header").css('top','-90px');
+	    	   $(".header").css('border-bottom','0px solid #ddd');
+	       } else if(st!=0){
+	    	   $(".header").css('top','0px');
+	    	   $(".header").css('background-color','white');
+	    	   $(".logo").removeClass('sprite-Logo');
+		    	$(".logo").addClass('sprite-Color-Logo');		    	
+		    	$(".menuGrid > table a").addClass("blackColor");
+		    	$(".menuGrid > table td").mouseover(function() {
+		    	    $(this).css("border-bottom","1px solid black");
+		    	}).mouseout(function() {
+		    	    $(this).css("border-bottom","none");
+		    	});		    	
+		    	$(".search1").css('visibility','hidden');
+		    	$(".search1").addClass('display');
+		    	$(".search1").removeClass('sprite-search');
+		    	$(".search2").addClass('sprite-search-Dark');
+		    	$(".search2").css('visibility','visible');
+		    	$(".search2").removeClass('display');		    	
+		    	$(".user1").css('visibility','hidden');
+		    	$(".user1").addClass('display');
+		    	$(".user1").removeClass('sprite-User');
+		    	$(".user2").addClass('sprite-User-Dark');
+		    	$(".user2").css('visibility','visible');
+		    	$(".user2").removeClass('display');			    	
+		    	$(".header").css('border-bottom','1px solid #ddd');
+		    	$(".header").css("height","90px");
+	       }else if(st==0 || st>=100){
+	    	    if ($location.path()!="/helpAndSupport") {
+	    	    	$(".header").css('top','0px');
+		    	    $(".header").css('background-color','transparent');
+		    	    $(".logo").addClass('sprite-Logo');
+			    	$(".logo").removeClass('sprite-Color-Logo');	
+			    	$(".menuGrid > table a").removeClass("blackColor");
+			    	$(".menuGrid > table td").mouseover(function() {
+			    	    $(this).css("border-bottom","1px solid white");
+			    	}).mouseout(function() {
+			    	    $(this).css("border-bottom","none");
+			    	});		    	
+			    	$(".search1").removeClass('display');
+			    	$(".search1").css('visibility','visible');
+			    	$(".search1").addClass('sprite-search');
+			    	$(".search2").removeClass('sprite-search-Dark');
+			    	$(".search2").css('visibility','hidden');
+			    	$(".search2").addClass('display');		    	
+			    	$(".user1").removeClass('display');
+			    	$(".user1").css('visibility','visible');
+			    	$(".user1").addClass('sprite-User');
+			    	$(".user2").removeClass('sprite-User-Dark');
+			    	$(".user2").css('visibility','hidden');
+			    	$(".user2").addClass('display');	    	
+			    	$(".header").css('border-bottom','0px solid #ddd');
+			    	$(".header").css("height","0px");
+				}
+	       }
+	       lastScrollTop = st;	      
+	    });
+	    
+	    $.fn.MessageBox= function(e){
+	    	var headerHeight = $(".header").height();
+	        var target = this.hash;
+	        if(e=='eventsClick'){
+	        	if($scope.alertList.length==0){
+	        		alert('No content available.');
+	        	}else{
+	        		target = $(".events");
+	        	}	        	
+	        }else if(e=='ccClick'){
+	        	target = $(".cc");
+	        }else if(e=='updatesClick'){
+	        	if($scope.buzzList.length==0){
+	        		alert('No content available.');
+	        	}else{
+	        		target = $(".updates");
+	        	}        	
+	        }
+	        if(target.offset().top>lastScrollTop){
+	        	 $('html, body').stop().animate({'scrollTop': target.offset().top}, 400, 'swing');
+	        }else if(target.offset().top<lastScrollTop){
+	        	 $('html, body').stop().animate({'scrollTop': target.offset().top - headerHeight}, 400, 'swing');
+	        }        
+	    };	     
+	});	
+	
+	$(document).unbind("keyup").keyup(function(e){ 
+	    var code = e.which; // recommended to use e.which, it's normalized across browsers
+	    if(code==13){
+	    	if ($("#loginModal").data('bs.modal') && $("#loginModal").data('bs.modal').isShown || $location.path()=="/campusLite"){
+	    		$rootScope.validateLogin('L');
+	    	}else if($("#postRegModal").data('bs.modal') && $("#postRegModal").data('bs.modal').isShown){
+	    		$rootScope.validateLogin('C');
+	    	}
+	    }
+	});
+
+	
+	$('.invalidId').css('display','none');
+	$('.invalidIdPAss').css('display','none');	
+	$( "#target" ).click(function() {
+		
+	});
+	
+	//Commented for CR FY17
+	/*$scope.loginCall=function(str){
+		$rootScope.login="";
+		$scope.forgotPswrdUsername="";		
+		if(str=="ncp"){
+			$("#loginSection").css('margin','100px 0px 0px 0px');
+			$scope.continueLogin=true;
+			$scope.continueWithoutLogin=false;
+			$rootScope.login=str;
+		}else if(str=="cc"){
+			$("#loginSection").css('margin','80px 0px 0px 0px');	
+			$scope.continueLogin=true;
+			$scope.continueWithoutLogin=true;
+			$rootScope.login=str;
+		}
+		$rootScope.userVO={};
+		$rootScope.userVO.username="";
+		
+		$('#loginModal').modal('toggle');
+		$('#loginModal').modal({backdrop: 'static', keyboard: false}); 
+		$(".header").css('top','-90px');	
+		$(".modal-backdrop").css('z-index','0');
+		$rootScope.loginTab=true;
+		$rootScope.passwordTab=false;
+		$rootScope.securityQuestTab=false;
+		$('.invalidId').css('display','none');
+		$('.invalidIdPAss').css('display','none');	
+	};*/
+	if($location.path()=="/password"){
+		$rootScope.loginCall("cc");
+		$rootScope.loginTab=false;
+		$rootScope.passwordTab=true;
+		$rootScope.securityQuestTab=false;
+	}
+	//Commented for CR FY17
+	/*$scope.closeLogin=function(){
+		
+			$('#loginModal').modal('hide');
+			$(".header").css('top','0px');
+			$(".modal-backdrop").css('z-index','1040');
+			$rootScope.userVO.username="";
+			
+			$scope.continueLogin=true;
+			$scope.continueWithoutLogin=false;
+			if($rootScope.login=="cc"){
+				$(".header").css('background-color','white');
+				$(".header").css('height','90px');
+				$(".logo").removeClass('sprite-Logo');
+				$(".logo").addClass('sprite-Color-Logo');		    	
+				$(".menuGrid > table a").addClass("blackColor");		    	
+			
+		}		
+	};*/
+	//Commented for CR FY17
+	/*$scope.forgotPassword=function(){
+		$rootScope.loginTab=false;
+		$rootScope.passwordTab=true;
+		$rootScope.securityQuestTab=false;
+		$scope.loginFormValidationArray=[];
+		$scope.forgotPswrdUsername="";
+	};*/
+	//Commented for CR FY17
+	/*$scope.cancelPasswordTab=function(){
+		
+			$rootScope.loginTab=true;
+			$rootScope.passwordTab=false;
+			$rootScope.securityQuestTab=false;
+			$rootScope.submitHide=false;
+			$scope.forgotPswrdUsername="";
+			$scope.loginFormValidationArray=[];
+			$('.invalidId').css('display','none');
+			$('.invalidIdPAss').css('display','none');
+			$(".modal-content .passwordTab>div:first-child").css('margin','100px 0px 0px 0px');
+			
+	};*/
+	
+	$scope.btnSelectRecType = function(recType){
+		//$location.path("/selectDrive");				// changed for CR#5957627 fy17
+		$location.path("/registrationPage");	// changed for CR#5957627 fy17
+		$rootScope.innerHeader=false;
+		$rootScope.innerFooter=false;
+		$('body').removeClass('bodyCSS');
+		
+		if(recType===NextStepIndiaConstants.ITCAND){
+			$rootScope.recType = "101";
+		}else if(recType===NextStepIndiaConstants.BPSCAND){
+			$rootScope.recType = "102";
+		}
+	};
+	
+	$rootScope.userVO = {};	
+	$scope.scrollTop=function(){		
+		$("html,body").animate({scrollTop: 0}, 500);
+	};	
+	
+	$rootScope.btnRegisterNewCand = function(e){
+		//appLoading.loading("Please wait...!");
+		$('#loginModal').modal('hide');		
+		$('.modal-backdrop').remove();
+		if(e=="ncp"){
+			$rootScope.login="ncp";
+		}
+		$location.path("/mainHome");
+		$('.oldHeaderFooter').css('display','block');
+		//$rootScope.innerHeader=false;
+		//$rootScope.innerFooter=false;
+		//$('body').removeClass('bodyCSS');
+		//appLoading.ready();		
+	};
+	
+	//commented for CR fy 17
+	/*$scope.btnSelectDrive=function(candType){
+		$location.path("/registrationPage");		
+		if(candType===NextStepIndiaConstants.CTCAND){
+			$rootScope.candType = NextStepIndiaConstants.CTCAND;
+		}else{
+			$rootScope.candType = NextStepIndiaConstants.DTCAND;
+		}
+	};*/
+	$scope.openPageContent='OPEN_PAGE_CONTENT';
+	//getDataBaseServices.getOpenPage({"userVO":JSON.stringify($rootScope.userVO)}).success(function(response){
+	$scope.alertList=[];
+	$scope.buzzList=[];
+	$scope.alertCount=3;
+	$scope.buzzCount=3;
+	$scope.viewMoreEv=true;
+	$scope.viewLessEv=false;
+	$scope.viewMoreBz=true;
+	$scope.viewLessBz=false;
+	$scope.mailSendFlag1Login=true;
+	$scope.viewMoreEvents=function(){
+		$rootScope.upcomingEvents = $rootScope.upcomingEvents.concat($scope.alertList.slice($rootScope.upcomingEvents.length,$rootScope.upcomingEvents.length+$scope.alertCount));
+		if($rootScope.upcomingEvents.length==$scope.alertList.length){
+			$scope.viewMoreEv=false;
+			$scope.viewLessEv=true;
+		}
+	};
+	
+	$scope.viewLessEvents=function(){
+		$rootScope.upcomingEvents=[];
+		$rootScope.upcomingEvents = $rootScope.upcomingEvents.concat($scope.alertList.slice(0,$scope.alertCount)); 
+		$scope.viewMoreEv=true;
+		$scope.viewLessEv=false;
+	}
+	
+	$scope.viewMoreBuzz=function(){
+		$rootScope.news = $rootScope.news.concat($scope.buzzList.slice($rootScope.news.length,$rootScope.news.length+$scope.buzzCount));
+		if($rootScope.news.length==$scope.buzzList.length){
+			$scope.viewMoreBz=false;
+			$scope.viewLessBz=true;
+		}
+	};
+	
+	$scope.viewLessbuzz=function(){
+		$rootScope.news=[];
+		$rootScope.news = $rootScope.news.concat($scope.buzzList.slice(0,$scope.buzzCount)); 
+		$scope.viewMoreBz=true;
+		$scope.viewLessBz=false;
+	}
+	
+	if($rootScope.count==undefined){
+		$rootScope.count=0;
+		getDataBaseServices.getOpenPage().success(function(response){
+		
+			if(response.message=='Seesion_active'){
+				/*document.getElementById('errorMessageSpan1').innerHTML = "Session already active";
+				$('#errorModal').modal('toggle');*/
+				$location.path('/homePage');
+				if($location.path()=="/" || $location.path()=="/campusLite"){
+					$rootScope.innerHeader=false;
+					$rootScope.innerFooter=false;
+					$('.oldHeaderFooter').css('display','none');
+				}else{
+					$rootScope.innerHeader=true;
+					$rootScope.innerFooter=true;
+					$('.oldHeaderFooter').css('display','block');
+					$('body').addClass('bodyCSS');
+				}
+				$('#loginModal').modal('hide');
+				$('.modal-backdrop').remove();
+				$('body').css('overflow-y','scroll');
+			} 
+			$scope.alertList=response.alertList;
+			$rootScope.upcomingEvents=[];
+			$rootScope.upcomingEvents = $rootScope.upcomingEvents.concat($scope.alertList.slice(0,$scope.alertCount)); 
+			$scope.buzzList =response.buzzList;
+			$rootScope.news=[];
+			$rootScope.news = $rootScope.news.concat($scope.buzzList.slice(0,$scope.buzzCount)); 
+		});
+	} 	
+	
+	$scope.personName="";
+	$scope.emailID="";
+	$scope.question="";
+	$scope.requestVO={};
+	$scope.successMsg="";
+	$scope.sendQuestion=function(){
+		$scope.errorBucket=[];
+		$scope.requestVO.param1=$scope.personName;
+		$scope.requestVO.param2=$scope.emailID;
+		$scope.requestVO.param3=$scope.question;
+		
+		if($scope.personName=="" || $scope.personName==undefined || $scope.emailID=="" || $scope.emailID==undefined || $scope.question=="" || $scope.question==undefined){
+			if($scope.personName==""){	
+				$scope.errorBucket.push("Please Enter your name");
+			}
+			if($scope.emailID==""){
+				$scope.errorBucket.push("Please enter your email id");			
+			}
+			if($scope.question=="" || $scope.question==undefined){
+				$scope.errorBucket.push("Please specify your question");
+			}
+			if($scope.quest.personName.$invalid){
+					$scope.errorBucket.push("Please no special character or numbers in name");
+			}
+			if($scope.quest.emailInput.$invalid){
+				$scope.errorBucket.push("Please enter valid Email id format");
+			}
+			 $("#successModal").modal('toggle');
+		}else{
+			NProgress.start();
+			getDataBaseServices.askUsQuestion({"openPage":"askQuestion","requestVo":JSON.stringify($scope.requestVO)}).success(function(response){
+				if(response.param1=="SUCCESS"){
+					$scope.successMsg=response.param1;
+					$scope.errorBucket=[];
+					$('#successModal').modal('show');
+					$scope.errorBucket.push("Your Query has been submitted, we would shortly get back to you.");
+					$scope.requestVO={};			
+				}else if(response.param1=="FAIL"){
+					$('#successModal').modal('show');
+					$scope.errorBucket.push("Something went wrong please try after sometime.");
+				}
+				NProgress.done();
+			});
+			}
+			
+	};
+	$scope.closeMsg=function(){
+		if($scope.successMsg=="SUCCESS"){
+			$scope.personName="";
+			$scope.emailID="";
+			$scope.question="";
+		}		
+	};
+	$scope.onContinue=function(){
+		 $("#postRegModal").modal('toggle');
+	};
+    
+    $scope.enableITDesc = function(){
+    	$scope.showItDesc = true;
+    };
+    
+    $scope.disableITDesc = function(){     
+    	$scope.showItDesc = false;
+    };
+    
+    $scope.resetPassword = function(){
+    	  $rootScope.userVO.password = "";
+    	  $rootScope.userVO.userCaptcha = "";
+    };
+    
+    $scope.btnHowToApply = function(){    	
+    	$scope.showHowToApplyDiv = true;
+    };
+    $scope.btnHomePage = function(){
+    	$scope.showHowToApplyDiv = false;
+    	$location.path("/homePage1");
+    };
+    
+    //Added for CR fy 17
+    $scope.btnClickITInfo = function(){
+    	$('body').css('overflow-y','hidden');
+    	$scope.itLabelInModalShow = true;
+    	$scope.bpsLabelInModalShow = false;
+    	document.getElementById('infoMessageSpan').innerHTML ="Tata Consultancy Services (TCS) is an IT services, business solutions and outsourcing organisation that delivers real results to global businesses ensuring a level of certainty no other firm can match.\n\nTCS offers a consulting-led, integrated portfolio of IT and IT-enabled services (ITeS) delivered through its unique Global Network Delivery Model  (GNDM), which is recognized as the benchmark of excellence in software development.TCS IT services span across Application Development, Maintenance and Modernisation, System Integration and Performance Engineering.";
+	    $("#infoModal").modal('toggle');
+    }
+    
+    $scope.btnClickBPSInfo = function(){
+    	
+    	$('body').css('overflow-y','hidden');
+    	$scope.itLabelInModalShow = false;
+    	$scope.bpsLabelInModalShow = true;
+    	document.getElementById('infoMessageSpan').innerHTML ="We, at Tata Consultancy Services (TCS) BPS, offer a large pool of industry domain experts. We offer horizontal services for Finance and Accounting, Human Resources, Procurement & Analytics, across industries ranging from, banking and financial service, insurance services, drug development and safety services, retail services, telecom services, travel-related services, manufacturing services and knowledge services.We offer global exposure and an unparalleled career growth. So, come and explore opportunities and experience certainty with us at TCS.";
+	    $("#infoModal").modal('toggle');
+    }
+    
+    $rootScope.closeInfoModal =function(){
+			$('#infoModal').modal('hide');
+			$('body').css('overflow-y','scroll');
+			//$(".header").css('top','0px');
+			//$(".modal-backdrop").css('z-index','1040');			
+	};
+
+	//Adding Footer for Devops CICD
+	$scope.getRevisionDetailsForFooter = function(){
+		NProgress.start();
+		getDataBaseServices.getSvnRevisionDetails().success(function(response){
+			if(response!=null){
+				$rootScope.buildNumber=response;
+			}
+			NProgress.done();
+		}).error(function(response){
+			
+
+		});
+	};
+	
+	$scope.getRevisionDetailsForFooter();
+    //Commented for CR FY17
+    /*$scope.btnForgotPasswordClick = function(){
+    	$location.path("/forgotPassword");
+    };
+    
+    
+	if($rootScope.passwordTab==true && $rootScope.securityQuestTab==false){
+		$scope.forgotPswrdUsername="";
+	}
+	
+    $scope.forgotPwdSubmit = function(){
+		if($rootScope.securityQuestTab){
+			$scope.submitForgotPassword();
+		}else{
+			$scope.fetchSecQues();
+		}
+	};
+	$scope.fetchSecQues = function(){		
+		$scope.requestVO = {};
+		$scope.requestVO.param1 = "fetchSecQues";
+		$scope.requestVO.param2 = $scope.forgotPswrdUsername;
+		if($scope.requestVO.param2==undefined || $scope.requestVO.param2==""){
+			//$scope.loginFormValidationArray.push("Invalid format for CT Reference ID /DT Reference Id!!!");	
+			$('.txtUserName').css('border','1px solid #FF0B0B');
+		}else if($scope.requestVO.param2!=undefined && $scope.requestVO.param2!=""){
+			var checkUsernamePatter = $scope.requestVO.param2.match(/\bDT|CT\d{11}\b/);	
+			var checkUserEmail = $scope.requestVO.param2.match(/\S+@\S+\.\S+/);
+			if(checkUsernamePatter!=null || checkUserEmail!=null){
+				if($scope.forgotPasswordForm.$valid){
+					$('.forgotId').css('display','none');
+					$('.txtUserName').css('border','1px solid #ccc');
+					NProgress.start();
+					getDataBaseServices.fetchSecQuest({"requestVo":JSON.stringify($scope.requestVO)}).success(function(response){			
+						if(response!=null){				
+							if(response.param1==NextStepIndiaConstants.SUCCESS){
+								 $scope.forgotPswrdSecQuestion = response.param2;
+								 $scope.fetchSecAns = response.param3;
+								 $rootScope.securityQuestTab=true;
+								 $scope.forgotPswrdSecAnswer="";
+								 $('.invAns').css('display','none');
+								 $(".modal-content .passwordTab>div:first-child").css('margin','70px 0px 0px 0px');	
+								 $(".passwordTab>div:first-child").css('margin','70px 0px 0px 0px');
+							}else{
+								if(checkUserEmail!=null){
+									$scope.loginFormValidationArray.push("Please enter the valid email id");
+								}else if(checkUsernamePatter!=null || checkUsernamePatter.includes("CT") || checkUsernamePatter.includes("DT")){
+									$scope.loginFormValidationArray.push("Invalid format for CT Reference ID /DT Reference Id!!!");
+								}else{
+									$scope.loginFormValidationArray.push("Please enter the correct details");
+								}
+								$('.forgotId').css('display','block');
+							}							
+						}	
+						NProgress.done();
+					});
+				}
+			}else{
+				$scope.loginFormValidationArray.push("Invalid format for CT Reference ID /DT Reference Id!!!");
+				$('.forgotId').css('display','block');
+			}
+		}
+		
+	};
+	
+	$scope.submitForgotPassword=function(){
+		$scope.errorMessage="";
+		$scope.requestVO = {};
+		$scope.requestVO.param1 = "forgotPassword";
+		$scope.requestVO.param2 = $scope.forgotPswrdUsername;
+		$scope.requestVO.param3 = NextStepIndiaConstants.India;
+		$scope.requestVO.param4 = $scope.forgotPswrdSecAnswer;
+		NProgress.start();
+		$(".modal-content .passwordTab>div:first-child").css('margin','50px 0px 0px 0px');	
+		$(".passwordTab>div:first-child").css('margin','50px 0px 0px 0px');
+		getDataBaseServices.forgotPasswordSubmit({"requestVo":JSON.stringify($scope.requestVO)}).success(function(response){
+			$('.invAns').css('display','block');			 
+			if(response.param1=="SUCCESS"){	
+				$('.invAns').css('color','#2d7302');
+				$scope.errorMessage="Your Password has been mailed to your email Id Mentioned at the time of registration";	
+				$rootScope.submitHide=true;
+				$scope.forgotPswrdUsername="";
+				$scope.forgotPswrdSecAnswer="";				
+			}else{
+				$('.invAns').css('color','#FF0101');
+				$scope.errorMessage="Incorrect Answer!! Please enter the correct security Question answer";
+			}
+			NProgress.done();
+		});
+	};*/
+});
+
+
+candApplication.controller('forgotPasswordController',function($scope,$window,$rootScope,$location,getDataBaseServices,NextStepIndiaConstants,$http,$routeParams){
+	/*Letter Verification*/
+	if($location.path()=="/" || $location.path()=="/campusLite"){
+		$rootScope.innerHeader=false;
+		$rootScope.innerFooter=false;
+		$('body').removeClass('bodyCSS');
+	}else{
+		$rootScope.innerHeader=true;
+		$rootScope.innerFooter=true;
+		$('body').addClass('bodyCSS');
+	}
+	$scope.authKey=$routeParams.authKey;
+	$scope.displayPage = $routeParams.displayPage;
+	$scope.refId=$routeParams.refId;
+	$scope.resetPasswordVO={};
+	$scope.resetPasswordVO.authKey=$routeParams.authKey;
+	$scope.resetPasswordVO.referenceId=$routeParams.refId;
+	$scope.resetPasswordVO.countryId='IND';
+	$rootScope.submitHide=false;
+	$scope.showOfferJoining=true;
+	$scope.verifyDetailsDiv=false;
+	$scope.validateLetterDiv=false;
+	$rootScope.loginTab=false;
+	$rootScope.passwordTab=true;
+	$rootScope.securityQuestTab=false;
+	$scope.requestVO=[];
+	$scope.forgotPswrdSecAnswer="";	
+	$scope.forgotPswrdUsername="";
+	$scope.loginFormValidationArray=[];
+	$scope.mailSuccess=false;
+	$scope.mailError=false;
+	//$scope.urlCheck=true; 		//commenting this variable for issue marked by security
+	$scope.passRegEx=new RegExp('/^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[$@$!#^*~&])([a-zA-Z0-9$@$!#^*~&]{8,})$/');
+	/*if($rootScope.passwordTab==true && $rootScope.securityQuestTab==false){
+		$scope.forgotPswrdUsername="";
+	}*/
+	if("null"==$scope.authKey){
+		//$scope.verifyInstDiv=false;
+		if("ol_verf"===$scope.displayPage){
+			$scope.offer='O';
+		}else if("pol_verf"===$scope.displayPage){
+			$scope.offer='P';
+		}else if("jl_verf"===$scope.displayPage){
+			$scope.offer='J';
+		}
+	}
+	if($scope.displayPage!== 'null' && $scope.displayPage=="jl_verf" && $scope.authKey!=='null'){
+		$scope.offer='J';
+		$scope.jl_Required= true;
+		$scope.regPatternol=/^TCSL\/(CT|DT)[0-9]{11}\/[0-9]{4,}\/[A-Za-z]/;
+	}else if($scope.displayPage!== 'null' && $scope.displayPage=="ol_verf" && $scope.authKey!=='null'){
+		$scope.offer='O';
+		$scope.ol_Required=true;
+		$scope.regPatternol=/^(TCSL|TEIL)\/(CT|DT)[0-9]{11}\/[A-Za-z]/;
+	}else if($scope.displayPage!== 'null' && $scope.displayPage=="pol_verf" && $scope.authKey!=='null'){
+		$scope.offer='P';
+		$scope.pol_Required=true;
+		$scope.regPatternol=/^(TCSL|TEIL)\/(CT|DT)[0-9]{11}\/[A-Za-z]/;
+	}else if($scope.displayPage!== 'null' && $scope.displayPage=="jl_verf"){
+		 $scope.offer='J';
+		 $scope.jl_Required= true;
+		 $scope.regPatternol=/^TCSL\/(CT|DT)[0-9]{11}\/[0-9]{4,}\/[A-Za-z]/;
+	}else if($scope.displayPage!== 'null' && $scope.displayPage=="pol_verf"){
+		$scope.offer='P';
+		$scope.pol_Required=true;
+		$scope.regPatternol=/^(TCSL|TEIL)\/(CT|DT)[0-9]{11}\/[A-Za-z]/;
+	}else if($scope.displayPage!== 'null' && $scope.displayPage=="ol_verf") {
+		$scope.offer='O';
+		$scope.ol_Required=true;
+		$scope.regPatternol=/^(TCSL|TEIL)\/(CT|DT)[0-9]{11}\/[A-Za-z]/;
+	}
+	
+	
+	$scope.verifyOffer=function(){
+		if($scope.captchText!=$scope.captchaTxt){
+			window.scrollTo(0,0);
+			document.getElementById('errorMessageSpan1').innerHTML= "Captcha mismatch error" ;
+			$scope.visibleErrorModel=true;
+			$('#myModal').modal('toggle');
+		} 
+		
+		
+		else if($scope.offerLetter.$invalid){
+			/*if($scope.captchText!=$scope.captchaTxt){
+				window.scrollTo(0,0);
+				document.getElementById('errorMessageSpan1').innerHTML= "Captcha mismatch error" ;
+				$scope.visibleErrorModel=true;
+				$('#myModal').modal('toggle');
+			} 
+*/			 if($scope.offer=='O'){
+				$scope.ol_Required=true;
+				$scope.pol_Required= false;
+				$scope.jl_Required= false;
+				$scope.regPatternol=/^(TCSL|TEIL)\/(CT|DT)[0-9]{11}\/[A-Za-z]/;
+				if($scope.offerLetter.offerRef.$error.required || $scope.offerLetter.offerRef.$error.pattern){
+					/*alert($scope.regPatternol);*/
+					window.scrollTo(0,0);
+					document.getElementById('errorMessageSpan1').innerHTML= "Invalid format for Offer Reference !!! Please ensure you enter correct Format for Offer Reference";
+					$scope.visibleErrorModel=true;
+					$('#myModal').modal('toggle');
+				}				
+			}
+			else if($scope.offer=='J'){				
+				$scope.ol_Required=false;
+				$scope.pol_Required= false;
+				$scope.jl_Required= true;
+				$scope.regPatternol=/^TCSL\/(CT|DT)[0-9]{11}\/[0-9]{4,}\/[A-Za-z]/;
+				if($scope.offerLetter.joiningId.$error.required || $scope.offerLetter.joiningId.$error.pattern){
+					window.scrollTo(0,0);
+					document.getElementById('errorMessageSpan1').innerHTML= "Invalid format for Joining Reference !!! Please ensure you enter correct Format for Joining Reference";
+					$scope.visibleErrorModel=true;
+					$('#myModal').modal('toggle');
+				}
+			}	
+			else if($scope.offer=='P'){				
+				$scope.ol_Required=false;
+				$scope.pol_Required= true;
+				$scope.jl_Required= false;
+				$scope.regPatternol=/^(TCSL|TEIL)\/(CT|DT)[0-9]{11}\/[A-Za-z]/;
+				if($scope.offerLetter.profferRef.$error.required || $scope.offerLetter.profferRef.$error.pattern){
+					window.scrollTo(0,0);
+					document.getElementById('errorMessageSpan1').innerHTML= "Invalid format for Provisional Offer Reference !!! Please ensure you enter correct Format for Provisional Offer Reference";
+					$scope.visibleErrorModel=true;
+					$('#myModal').modal('toggle');
+				}
+			}	
+		}		
+		else{
+			var flag=null;
+			if('null'!=$scope.authKey){
+			if($scope.offer=='J'){
+					$scope.refNo=$scope.joiningTxt;
+				}else if($scope.offer=='O'){
+					$scope.refNo=$scope.OfferTxt;
+				}else if($scope.offer=='P'){
+					$scope.refNo=$scope.prOfferTxt;
+				}
+				//$scope.letterRefNo=$scope.authKey;
+				flag='D';
+			}else{
+				if($scope.offer=='J'){
+					$scope.refNo=$scope.joiningTxt;
+				}else if($scope.offer=='O'){
+					$scope.refNo=$scope.OfferTxt;
+				}else if($scope.offer=='P'){
+					$scope.refNo=$scope.prOfferTxt;
+				}
+				//$scope.letterRefNo=$scope.authKey;
+				flag='I';
+			}
+			$scope.verify={};
+			$scope.verify.refNo=$scope.refNo;
+			$scope.verify.offer=$scope.offer;
+			$scope.verify.flag=flag;
+			
+		//	$http({method:'POST',url:"./view/OfferLetterController/verifyOfferJoiningLetter",dataType:'json',data:{$scope.verify}}).success(function(response){
+			$http.post("./view/OfferLetterController/verifyOfferJoiningLetter",$scope.verify).success(function(response){
+				if("null"!==response){
+					$scope.letterverifyVO=response;
+					$scope.verifyDetailsDiv=false;
+					$scope.validateLetterDiv=true;
+					$scope.showOfferJoining=false;
+				/*	if($scope.validateLetterDiv=false){
+						$scope.verifyDetailsDiv=true;
+					}*/
+					/*else if($scope.validateLetterDiv=true){
+						$scope.verifyDetailsDiv=false;
+					}*/
+				}else{
+					$scope.verifyDetailsDiv=true;
+					$scope.validateLetterDiv=false;
+					$scope.showOfferJoining=false;
+				}
+				
+			});
+			
+		}		
+	}
+	
+	$scope.setJoiningOfferFlag=function(){
+		$scope.showOfferJoining=true;
+		
+		$scope.validateLetterDiv=false;
+		$scope.verifyDetailsDiv=false;
+	}
+	
+	function getRandomInt(min, max) {
+		 	return Math.floor(Math.random() * (max - min + 1)) + min;
+	}
+	
+	$scope.refreshCaptcha = function(){
+		$scope.captchText = getRandomInt(10000,99999);
+		$scope.captchaTxt="";
+	}
+	
+	
+	$scope.captchText=getRandomInt(10000,99999);
+	$scope.loginFormValidationArray=[];
+	
+	$scope.forgotPwdSubmit = function(){
+		if($rootScope.securityQuestTab)
+			{
+				$scope.submitForgotPassword();
+			}else{
+				$scope.fetchSecQues();
+			}
+	};
+	$scope.fetchSecQues = function(){		
+		$scope.requestVO = {};
+		$scope.requestVO.param1 = "fetchSecQues";
+		$scope.requestVO.param2 = $scope.forgotPswrdUsername;
+		if($scope.requestVO.param2==undefined || $scope.requestVO.param2==""){
+			//$scope.loginFormValidationArray.push("Invalid format for CT Reference ID /DT Reference Id!!!");	
+			$('.txtUserName').css('border','1px solid #FF0B0B');
+		}else if($scope.requestVO.param2!=undefined && $scope.requestVO.param2!=""){
+			var checkUsernamePatter = $scope.requestVO.param2.match(/\bDT|CT\d{11}\b/);		
+			if(checkUsernamePatter!=null){
+				if($scope.forgotPasswordForm.$valid){
+					$('.forgotId').css('display','none');
+					$('.txtUserName').css('border','1px solid #ccc');
+					NProgress.start();
+					getDataBaseServices.fetchSecQuest({"requestVo":JSON.stringify($scope.requestVO)}).success(function(response){			
+						if(response!=null){	
+							response = angular.fromJson(atob(response));
+							if(response.param1==NextStepIndiaConstants.SUCCESS){
+								 $scope.forgotPswrdSecQuestion = response.param2;
+								 $scope.fetchSecAns = response.param3;
+								 $rootScope.securityQuestTab=true;
+								 $scope.forgotPswrdSecAnswer="";
+								 $('.invAns').css('display','none');
+								 $(".modal-content .passwordTab>div:first-child").css('margin','70px 0px 0px 0px');	
+								 $(".passwordTab>div:first-child").css('margin','70px 0px 0px 0px');
+							}else{
+								$scope.loginFormValidationArray.push("Please enter the correct details");
+								$('.forgotId').css('display','block');
+							}							
+						}	
+						NProgress.done();
+					});
+				}
+			}else{
+				$scope.loginFormValidationArray.push("Invalid format for CT Reference ID /DT Reference Id!!!");
+				$('.forgotId').css('display','block');
+			}
+		}
+		
+	};
+	
+	$scope.submitForgotPassword=function(){
+		$scope.errorMessage="";
+		$scope.requestVO = {};
+		$scope.requestVO.param1 = "forgotPassword";
+		$scope.requestVO.param2 = $scope.forgotPswrdUsername;
+		$scope.requestVO.param3 = NextStepIndiaConstants.India;
+		$scope.requestVO.param4 = $scope.forgotPswrdSecAnswer;
+		NProgress.start();
+		getDataBaseServices.forgotPasswordSubmit({"requestVo":JSON.stringify($scope.requestVO)}).success(function(response){
+			$('.invAns').css('display','block');
+			response = angular.fromJson(atob(response));
+			if(response.param1=="SUCCESS"){						
+				$scope.errorMessage="Your Password has been mailed to your Email Id mentioned at the time of registration";	
+				$rootScope.submitHide=true;
+				$scope.forgotPswrdUsername="";
+				$scope.forgotPswrdSecAnswer="";				
+			}else{
+				$scope.errorMessage="Incorrect Answer!! Please enter the correct security Question answer";
+			}
+			NProgress.done();
+		});
+	};
+	
+	
+	$scope.submitUnlock=function(){
+	
+		/*if($scope.forgotPswrdSecAnswer!=$scope.fetchSecAns ){			
+			window.scrollTo(0,0);
+			document.getElementById('errorMessageSpan1').innerHTML= "Incorrect Answer!! Please enter the correct security Question answer" ;
+			$scope.visibleErrorModel=true;
+			$('#myModal').modal('toggle');
+		}
+		else{*/
+		//$('.invAns').css('display','none');
+		if($scope.forgotPswrdSecAnswer==undefined || $scope.forgotPswrdSecAnswer==null || $scope.forgotPswrdSecAnswer==""){
+			$('.answerText').css('border','1px solid #FF0B0B');
+		}else if($scope.forgotPswrdSecAnswer!=undefined && $scope.forgotPswrdSecAnswer!=null && $scope.forgotPswrdSecAnswer!=""){
+			$('.answerText').css('border','1px solid #CCC');
+			var data = {"param1":$scope.forgotPswrdUsername,"param2":$scope.forgotPswrdSecAnswer}; 
+			NProgress.start();
+			$http.post("./view/LoginController/validateUnlockAccount/",data).success(function(response){
+				if("SUCCESS"===response){					
+					window.scrollTo(0,0);
+					document.getElementById('errorMessageSpan1').innerHTML= "Your Account has been successfully unlocked." ;
+					$scope.visibleErrorModel=true;
+					$('#myModal').modal('toggle');
+					/*$scope.errorMessage="Your Account has been successfully unlocked.";
+					$('.invAns').css('display','block');	*/				
+					$scope.submitOk=function(){
+						$location.path('/');
+						$('#myModal').modal('hide');
+						$('.modal-backdrop').remove();
+						$('body').addClass('bodyCSS');
+					};
+				}else if("Invalid Answer"==response){
+					window.scrollTo(0,0);
+					document.getElementById('errorMessageSpan1').innerHTML= "Incorrect Answer!! Please enter the correct security Question answer" ;
+					$scope.visibleErrorModel=true;
+					$('#myModal').modal('toggle');
+				}
+				NProgress.done();
+			});
+		}
+		
+/*			
+		}*/
+	};
+	
+	$scope.resetUnlock=function(){
+		$scope.forgotPswrdSecQuestion = "";
+		$scope.forgotPswrdSecAnswer = "";
+		
+	};
+	$scope.cancelUnlock=function(){
+		$location.path('/');
+	};
+	
+	
+	$scope.submitForgotPswrd = function(){
+		
+		$scope.validationArray = [];
+		
+		if($scope.forgotPasswordForm.$invalid){
+			if($scope.forgotPasswordForm.userName.$error.required){
+				$scope.validationArray.push("Please enter User Name");
+			} 
+			if($scope.forgotPasswordForm.secAnswer.$error.required){
+				$scope.validationArray.push("Please enter Security Answer");
+			} 
+			if($scope.forgotPasswordForm.txtCaptcha.$error.required){
+				$scope.validationArray.push("Please enter text you see below");
+			}
+			if($scope.validationArray.length>0){
+				window.scrollTo(0,0);
+				document.getElementById('errorMessageSpan1').innerHTML= $scope.validationArray.join("</br>"); ;
+				$scope.visibleErrorModel=true;
+				$('#myModal').modal('toggle');
+			}
+		}else if ($scope.forgotPasswordForm.$valid){
+			if($scope.captchText!=$scope.captchaTxt){
+				window.scrollTo(0,0);
+				document.getElementById('errorMessageSpan1').innerHTML= "Captcha mismatch error" ;
+				$scope.visibleErrorModel=true;
+				$('#myModal').modal('toggle');
+			}else if($scope.forgotPswrdSecAnswer!=$scope.fetchSecAns ){
+				window.scrollTo(0,0);
+				document.getElementById('errorMessageSpan1').innerHTML= "Incorrect Answer!! Please enter the correct security Question answer" ;
+				$scope.visibleErrorModel=true;
+				$('#myModal').modal('toggle');
+			}else{
+				$scope.requestVO = {};
+				$scope.requestVO.param1 = "forgotPassword";
+				$scope.requestVO.param2 = NextStepIndiaConstants.India;
+				getDataBaseServices.forgotPasswordSubmit({"requestVo":JSON.stringify($scope.requestVO)}).success(function(response){
+					if(response!=null){
+						response = angular.fromJson(atob(response));
+						if(response.param1==NextStepIndiaConstants.SUCCESS){
+							window.scrollTo(0,0);
+							document.getElementById('errorMessageSpan1').innerHTML= "Your Password has been mailed to your email Id Mentioned at the time of registration" ;
+							$scope.visibleErrorModel=true;
+							$('#myModal').modal('toggle');
+						}else{
+							window.scrollTo(0,0);
+							document.getElementById('errorMessageSpan1').innerHTML= "Incorrect details are entered!Please make sure you enter the correct details" ;
+							$scope.visibleErrorModel=true;
+							$('#myModal').modal('toggle');
+							
+						}
+						
+					 }
+				});
+			}		
+			
+		}
+		
+	}
+	
+
+
+		
+	
+	
+	$scope.resetForgotPswrd = function(){
+		$scope.forgotPswrdUsername = "";
+		$scope.forgotPswrdSecQuestion = "";
+		$scope.forgotPswrdSecAnswer = "";
+		$scope.captchaTxt = "";
+	}
+	
+	$scope.cancelForgotPswrd = function(){
+		$location.path("/");
+	}
+	
+	$scope.checkStrength = function(){		
+		if($scope.resetPasswordForm.password.$error.required){
+			$scope.reqPassShow = true;
+			$("#password").css('border','1px solid red');
+			$scope.passErrorMsg = "You can't leave this empty.";
+		}else{
+			var password = $('#password').val();
+			$scope.reqPassShow = true;
+			var strength = 0			
+			if (password.length < 8) { 
+				$("#password").css('border','1px solid red');
+				$scope.passErrorMsg =  "Password must be 8 characters long";
+			}else{
+				//pwd policy change according to ux by deepesh
+				if(!password.match(/^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])([a-zA-Z0-9!@#$^&*~()%+,-./;:<=>?_`{|}]{8,15})$/)){
+					strength = 3;
+				}
+				if (strength == 3 ){
+					$("#password").css('border','1px solid red');
+					$scope.passErrorMsg =  'Please enter password as per TCS Password Policy!';
+				}else{
+					$("#password").css('border','1px solid #00a51c');
+					$scope.reqPassShow = false;	
+				}
+			}
+		}
+	}
+	
+	$scope.displayPswrdPolicy = function(){
+		$('body').css('overflow-y','hidden');
+		$("#pswrdModal").modal('toggle');
+	}
+	
+	$scope.reqValidfunc = function(id){
+		if (id=='password') {
+			$scope.checkStrength();
+		}else if(id=='confirmPassword'){
+			 if($scope.resetPasswordForm.confirmPassword.$error.required){
+				 $scope.reqRe_PassShow = true;
+				 $scope.re_passErrorMsg = "You can't leave this empty."
+				 $("#confirmPassword").css('border','1px solid red');
+			 }else if($scope.resetPasswordVO.password!=undefined && $scope.resetPasswordVO.confirmPassword!=undefined ){
+				if(!angular.equals($scope.resetPasswordVO.password,$scope.resetPasswordVO.confirmPassword)){
+					$scope.reqRe_PassShow = true;
+					$scope.re_passErrorMsg = "New and Confirm passwords do not match."
+					$("#confirmPassword").css('border','1px solid red');
+				}else{
+					 $scope.reqRe_PassShow = false;
+					 $("#confirmPassword").css('border','1px solid #00a51c');
+				 }
+			 }
+		 }/*else if(id=='referencId'){
+			 if($scope.resetPasswordForm.referencId.$error.required){
+				 $scope.reqRefIdShow = true;
+				 $scope.refIdErrorMsg = "You can't leave this empty."
+				 $("#referencId").css('border','1px solid red');
+			 }else{
+				 $scope.reqRefIdShow = false;
+				 $("#referencId").css('border','1px solid #00a51c');
+			 }
+		 }*/
+		else if(id=='emailId'){
+			 if($scope.resetPasswordForm.emailId.$error.required){
+				 $scope.reqEmailIdShow = true;
+				 $scope.patternEmailIdShow = false;
+				 $scope.emailIdErrorMsg = "You can't leave this empty."
+				 $("#emailId").css('border','1px solid red');
+			 }else if($scope.resetPasswordForm.emailId.$error.pattern){
+				 $scope.reqEmailIdShow = false;
+				 $scope.patternEmailIdShow = true;
+				 $scope.emailIdErrorMsg = "Invalid email"
+				 $("#emailId").css('border','1px solid red');
+			 }
+			 else{
+				 $scope.reqEmailIdShow = false;
+				 $scope.patternEmailIdShow = false;
+				 $("#emailId").css('border','1px solid #00a51c');
+			 }
+		 }
+	}
+	
+	$scope.resetPasswordSubmit = function() {
+		$scope.resetSuccess=false;
+		$scope.mailError=false;
+		if (!$scope.reqPassShow && !$scope.reqRe_PassShow && !$scope.reqEmailIdShow && !$scope.patternEmailIdShow) {
+			$scope.resetPasswordVO.verificationFlag='N';
+			$scope.resetPasswordVO.lockTypeFlag='R';
+			getDataBaseServices.authenticateUnlockURL({"requestVO":JSON.stringify($scope.resetPasswordVO)},$scope.authKey).success(function(response){
+				$scope.resetPasswordVO = response;
+				if ("Y"===response.outFlag) {
+					$scope.resetSuccess=true;
+					//$scope.urlCheck=true;
+				}else {
+					$scope.mailError=true;
+				}
+			}).error(function(response){
+
+			});
+		} else {
+			$scope.reqRe_PassShow = true;
+			$scope.re_passErrorMsg = "There are still invalid fields above"
+		}
+	}
+	
+	if("unlock"===$scope.displayPage){
+		$scope.resetPasswordVO.lockTypeFlag='U';
+		$scope.resetPasswordVO.verificationFlag='N';
+		getDataBaseServices.authenticateUnlockURL({"requestVO":JSON.stringify($scope.resetPasswordVO)},$scope.authKey,$scope.refId).success(function(response){
+			$scope.resetPasswordVO = response;
+			if ("Y"===response.outFlag) {
+				$scope.mailSuccess=true;
+			}else {
+				$scope.mailError=true;
+			}
+		}).error(function(response){
+
+		});
+	}
+	//commenting this  for issue marked by security
+	/*else if ("resetPassword"===$scope.displayPage) {
+		if ($scope.urlCheck) {
+			$scope.resetPasswordVO.lockTypeFlag='R';
+			$scope.resetPasswordVO.verificationFlag='Y';
+			getDataBaseServices.authenticateUnlockURL({"requestVO":JSON.stringify($scope.resetPasswordVO)},$scope.authKey).success(function(response){
+				$scope.resetPasswordVO = response;
+				if ("Y"===response.outFlag) {
+					$scope.urlCheck=false;
+				}else {
+					$scope.mailError=true;
+				}
+			}).error(function(response){
+				console.log("resetPassword link error " , response);
+			});
+		}
+	}	*/
+});
+
+})
+//});

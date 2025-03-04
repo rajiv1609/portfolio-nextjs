@@ -1,0 +1,463 @@
+/* --- Made by justgoscha and licensed under MIT license --- */
+'use strict';
+var app = angular.module('autocomplete', ['ngSanitize']);
+
+app.directive('autocomplete', function($location,$anchorScroll) {
+  var index = -1;
+
+  return {
+    restrict: 'E',
+    scope: {
+      $select: '=ngModel',
+      suggestions: '=data',
+      onType: '=onType',
+      onSelect: '=onSelect',
+      autocompleteRequired: '=',
+      noAutoSort: '=noAutoSort',
+      blur:'&onBlur',
+      bindString:'=suggestionBind'
+    },
+    controller: ['$scope', function($scope){
+      // the index of the suggestions that's currently selected
+      $scope.selectedIndex = -1;
+
+      $scope.initLock = true;
+
+      // set new index
+      $scope.setIndex = function(i){
+        $scope.selectedIndex = parseInt(i);
+      };
+
+      this.setIndex = function(i){
+        $scope.setIndex(i);
+        $scope.$apply();
+      };
+
+      $scope.getIndex = function(i){
+        return $scope.selectedIndex;
+      };
+
+      // watches if the parameter filter should be changed
+      var watching = true;
+
+      // autocompleting drop down on/off
+      $scope.completing = false;
+
+      // starts autocompleting on typing in something
+      $scope.$watch('searchParam', function(newValue, oldValue){
+
+        if (oldValue === newValue || (!oldValue && $scope.initLock)) {
+          return;
+        }
+
+        if(watching && typeof $scope.searchParam !== 'undefined' && $scope.searchParam !== null) {
+          $scope.completing = true;
+          $scope.searchFilter = $scope.searchParam;
+          $scope.selectedIndex = -1;
+          
+          $scope.$select.isSelected=false;
+          $scope.$select.$selected=null;
+          $scope.$select.$text=$scope.searchParam;
+          
+        }
+        
+        // function thats passed to on-type attribute gets executed
+        if($scope.onType)
+          $scope.suggestions=$scope.onType($scope.searchParam);
+        //this.$apply();
+        //$scope.$apply();
+      });
+
+      // for hovering over suggestions
+      this.preSelect = function(suggestion){
+
+        watching = false;
+
+        // this line determines if it is shown
+        // in the input field before it's selected:
+        //$scope.searchParam = suggestion;
+
+        $scope.$apply();
+        watching = true;
+
+      };
+
+      $scope.preSelect = this.preSelect;
+
+      this.preSelectOff = function(){
+        watching = true;
+      };
+
+      $scope.preSelectOff = this.preSelectOff;
+
+      // selecting a suggestion with RIGHT ARROW or ENTER or TAB
+      $scope.select = function(suggestionObject,suggestionText){
+        if(suggestionText){
+          $scope.searchParam = suggestionText;
+          $scope.searchFilter = suggestionText;
+          
+          $scope.$select.isSelected=true;
+          $scope.$select.$selected=suggestionObject;
+          $scope.$select.$text=suggestionText;
+          
+          if($scope.onSelect)
+            $scope.onSelect(suggestionObject,suggestionText);
+        }
+        watching = false;
+        $scope.completing = false;
+        setTimeout(function(){watching = true;},1000);
+        $scope.setIndex(-1);
+      };
+      
+      $scope.suggestionClicked=function(suggestionObject,event){
+    	  $scope.select(suggestionObject,angular.element(event.target.outerHTML).text());
+      }
+      
+      this.getBindString=function(){
+    	  return $scope.attrs.bind;
+      }
+      this.$scope=$scope;
+    }],
+    link: function(scope, element, attrs){
+        console.log(scope.noAutoSort)
+
+      setTimeout(function() {
+        scope.initLock = false;
+        scope.$apply();
+      }, 250);
+
+      var attr = '';
+
+      // Default atts
+      scope.attrs = {
+        "placeholder": "start typing...",
+        "class": "",
+        "id": "",
+        "inputclass": "",
+        "inputid": ""
+      };
+      
+      scope.$select={
+    	  '$selected':null,
+    	  'isSelected':false,
+    	  '$text':null
+      };
+      
+      for (var a in attrs) {
+        attr = a.replace('attr', '').toLowerCase();
+        // add attribute overriding defaults
+        // and preventing duplication
+        if (a.indexOf('attr') === 0) {
+          scope.attrs[attr] = attrs[a];
+        }
+      }
+
+      if (attrs.clickActivation) {
+        element[0].onclick = function(e){
+          if(!scope.searchParam){
+            setTimeout(function() {
+              scope.completing = true;
+              scope.$apply();
+            }, 200);
+          }
+        };
+      }
+
+      var key = {left: 37, up: 38, right: 39, down: 40 , enter: 13, esc: 27, tab: 9};
+
+      element[0].addEventListener("keydown", function(e){
+        var keycode = e.keyCode || e.which;
+
+        switch (keycode){
+          case key.esc:
+            // disable suggestions on escape
+            scope.select();
+            scope.setIndex(-1);
+            scope.$apply();
+            e.preventDefault();
+        }
+      }, true);
+      element[0].addEventListener("focus",function(e){
+    	  scope.completing = true;
+    	  scope.$apply();
+      },true);
+      element[0].addEventListener("blur", function(e){
+        // disable suggestions on blur
+        // we do a timeout to prevent hiding it before a click event is registered
+        setTimeout(function() {
+        	if((scope.suggestions.length==1)&&(angular.element(angular.element(element).find('li')[0]).text().toLowerCase()==scope.searchParam.toLowerCase())){
+        		scope.select(scope.suggestions[0],angular.element(angular.element(element).find('li')[0]).text());
+        	}
+        	else
+          		scope.select();
+          	scope.setIndex(-1);
+          	scope.$apply();
+          
+        	/*scope.select();
+        	scope.setIndex(-1);
+        	scope.$apply();*/
+        }, 150);
+        //if(scope.onBlur!=undefined)
+        //scope.onBlur();
+      }, true);
+
+      element[0].addEventListener("keydown",function (e){
+        var keycode = e.keyCode || e.which;
+
+        var l = angular.element(this).find('li').length;
+
+        // this allows submitting forms by pressing Enter in the autocompleted field
+        if(!scope.completing || l == 0) return;
+
+        // implementation of the up and down movement in the list of suggestions
+        switch (keycode){
+          case key.up:
+            index = scope.getIndex()-1;
+            if(index==-1)
+            	break;
+            if(index<-1){
+              index = l-1;
+            } else if (index >= l ){
+              index = -1;
+              scope.setIndex(index);
+              scope.preSelectOff();
+              break;
+            }
+            scope.setIndex(index);
+            
+            if(index!==-1)
+              scope.preSelect(angular.element(angular.element(this).find('li')[index]).text());
+
+            scope.$apply();
+            
+            var listElement=element.find('ul')[0];
+            var listActive=element.find('li.active')[0]
+            if(listActive){
+                //listActive.scrollIntoViewIfNeeded();//listElement.scrollTop = angular.element(listActive)[0].offsetTop-100;
+            	//console.log('from keyUP: Active attributes '+listActive.clientHeight+","+listActive.scrollHeight+","+listActive.scrollTop+" Ul attributes"+listElement.clientHeight+","+listElement.scrollHeight+","+listElement.scrollTop);
+            	if((listActive.offsetTop<listElement.scrollTop)||(listActive.offsetTop>listElement.scrollTop+listElement.clientHeight)){
+            		listElement.scrollTop=listActive.offsetTop;
+            	}
+            }
+            break;
+          case key.down:
+            index = scope.getIndex()+1;
+            if(index==l)
+            	break
+            if(index<-1){
+              index = l-1;
+            } else if (index > l ){
+              index = -1;
+              scope.setIndex(index);
+              scope.preSelectOff();
+              scope.$apply();
+              break;
+            }
+            scope.setIndex(index);
+            
+            if(index!==-1)
+              scope.preSelect(angular.element(angular.element(this).find('li')[index]).text());
+
+            scope.$apply();
+            var listElement=element.find('ul')[0];
+            var listActive=element.find('li.active')[0]
+            if(listActive){
+                //listActive.scrollIntoViewIfNeeded();//listElement.scrollBottom = angular.element(listActive)[0].offsetTop-100;
+            	//listElement.scrollTop = listActive.scrollTop + 24;
+            	//console.log('from keyDown: Active attributes '+listActive.clientHeight+","+listActive.scrollHeight+","+listActive.scrollTop+" Ul attributes"+listElement.clientHeight+","+listElement.scrollHeight+","+listElement.scrollTop);
+            	if((listActive.offsetTop<listElement.scrollTop)||(listActive.offsetTop>listElement.scrollTop+listElement.clientHeight-listActive.clientHeight)){
+            		listElement.scrollTop=listActive.offsetTop-listElement.clientHeight+listActive.clientHeight;
+            	}
+            }
+            break;
+          case key.left:
+            break;
+          case key.right:
+          case key.enter:
+          case key.tab:
+
+            index = scope.getIndex();
+            // scope.preSelectOff();
+            if(index !== -1) {
+              scope.select(scope.suggestions[index],angular.element(angular.element(this).find('li')[index]).text());
+              if(keycode == key.enter) {
+                e.preventDefault();
+              }
+            } else {
+              if(keycode == key.enter) {
+                scope.select();
+              }
+            }
+            scope.setIndex(-1);
+            scope.$apply();
+            break;
+          case key.esc:
+            // disable suggestions on escape
+            scope.select();
+            scope.setIndex(-1);
+            scope.$apply();
+            e.preventDefault();
+            break;
+          default:
+            return;
+        }
+
+      });
+    },
+    template: '\
+        <div class="autocomplete {{ attrs.class }}" id="{{ attrs.id }}">\
+          <input\
+            type="{{attrs.type}}"\
+    		name="{{attrs.name}}"\
+            ng-model="searchParam"\
+            placeholder="{{ attrs.placeholder }}"\
+            class="{{ attrs.inputclass }}"\
+            tabindex="{{ attrs.tabindex }}"\
+            id="{{ attrs.inputid }}"\
+            name="{{ attrs.name }}"\
+            ng-required="autocompleteRequired "\
+    		ng-pattern="{{attrs.pattern}}"\
+    		ng-blur="blur()"\
+    	/>\
+          <ul ng-show="completing && (suggestions | filter:searchFilter).length > 0">\
+            <li\
+              suggestion\
+              ng-repeat="suggestion in suggestions track by $index"\
+              index="{{ $index }}"\
+              val="{{ suggestion }}"\
+              ng-class="{ active: ($index === selectedIndex) }"\
+              ng-click="suggestionClicked(suggestion,$event)"\
+    		  ng-bind-html="getBindString()"\
+              ></li>\
+          </ul>\
+        </div>',
+    replace:true
+  };
+});
+
+app.filter('propsFilter', function() {
+	  return function(items, props,size) {
+	    var out = [];
+
+	    if (angular.isArray(items)) {
+	    	size = size || items.length;
+	 //     items.forEach(function(item) {
+	      for (var j = 0; j < items.length; j++) {	
+	    	  var item = items[j];
+	      
+	        var itemMatches = false;
+
+	        var keys = Object.keys(props);
+	        for (var i = 0; i < keys.length; i++) {
+	          var prop = keys[i];
+	          var text = props[prop].toLowerCase();
+	          if (item[prop].toString().toLowerCase().indexOf(text) !== -1) {
+	            itemMatches = true;
+	            break;
+	          }
+	        }
+
+	        if (itemMatches) {
+	          out.push(item);
+	        }
+	        if(out.length>size)
+	        	{
+	        	break;
+	        	}
+	      }
+	      //});
+	    } else {
+	      // Let the output be the input untouched
+	      out = items;
+	    }
+
+	    return out;
+	  }
+});
+
+app.filter('searchArray', function() {
+	  return function(items, props,size) {
+	    var out = [];
+
+	    if (angular.isArray(items)) {
+	    	size = size || items.length;
+	 //     items.forEach(function(item) {
+	      for (var j = 0; j < items.length; j++) {	
+	    	  var item = items[j];
+	      
+	        var itemMatches = false;
+
+	        var keys = Object.keys(props);
+	        for (var i = 0; i < keys.length; i++) {
+	          var prop = keys[i];
+	          var text = props[prop].toString().toLowerCase();
+	          if (item[prop].toString().toLowerCase()==text) {
+	            itemMatches = true;
+	            break;
+	          }
+	        }
+
+	        if (itemMatches) {
+	          out.push(item);
+	          break;
+	        }
+	        
+	      }
+	      //});
+	    } else {
+	      // Let the output be the input untouched
+	      out = items;
+	    }
+
+	    return out;
+	  }
+});
+app.filter('highlight', ['$sce', function ($sce) {
+  return function (input, searchParam) {
+    if (typeof input === 'function') return '';
+    if (searchParam) {
+      var words = '(' +
+            searchParam.split(/\ /).join(' |') + '|' +
+            searchParam.split(/\ /).join('|') +
+          ')',
+          exp = new RegExp(words, 'gi');
+      if (words.length) {
+        input = input.replace(exp, "<span class=\"highlight\">$1</span>");
+      }
+    }
+    return $sce.trustAsHtml(input);
+  };
+}]);
+
+app.directive('suggestion', ['$interpolate',function($interpolate){
+  return {
+    restrict: 'A',
+    require: '^autocomplete', // ^look for controller on parents element
+    link: function(scope, element, attrs, autoCtrl){
+    	setTimeout(function () {
+    	      if (scope.$index==scope.selectedIndex) {
+    	        window.scrollTo(0, element[0].offsetTop - 100)
+    	      }
+    	});
+    	var parentAttrs;
+    	autoCtrl.$scope.$watch('attrs', function(newVal, oldVal){
+            if(newVal)
+            	scope.parentAttrs=newVal;
+          });
+    	scope.getBindString=function(){
+    		return $interpolate("{{"+scope.$parent.bindString+"}}")(scope);
+    	}
+      element.bind('mouseenter', function() {
+    	//console.log(scope);
+    	//console.log(attrs);
+        autoCtrl.preSelect(attrs.val);
+        autoCtrl.setIndex(attrs.index);
+      });
+
+      element.bind('mouseleave', function() {
+        autoCtrl.preSelectOff();
+      });
+      
+    }
+  };
+}]);

@@ -1,0 +1,751 @@
+define(['angular','NextStepApiURL'],function(angular,NextStepApiURL){
+
+var app = angular.module('NextStepCandidateIndia.services',[])
+app.factory('getDataBaseServices',function($http,NextStepIndiaApiURL){
+	
+	var returnValue = {};
+	
+	/* Faq Functions Starts */
+	
+	var registerCandidateSummary = null;
+	
+	returnValue.faqData = function(){		
+		return $http({url:NextStepIndiaApiURL.faqData,
+					  method:'POST',
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}			
+		});
+	};
+	
+	returnValue.getRegisterCandidateSummary=function() {
+		return registerCandidateSummary;
+	}
+	
+	returnValue.setRegisterCandidateSummary=function(value) {
+		registerCandidateSummary = value;
+	}
+	
+	returnValue.verifyLogin = function(d){
+		return $http({url:NextStepIndiaApiURL.loginVerify,
+					  method:'POST',
+					  data:$.param(d),
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+			
+		});
+	};
+	returnValue.checkDuplicateUserId = function(d){
+		return $http({url:NextStepIndiaApiURL.checkDuplicateUserId,
+					  method:'POST',
+					  data:$.param(d),
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+			
+		});
+	};
+	
+	returnValue.resendfaqOTPlogin = function(d){
+		return $http({url:NextStepIndiaApiURL.resendfaqOTPlogin,
+					  method:'POST',
+					  data:$.param(d),
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+			
+		});
+	};
+	
+	returnValue.sendMail = function(d){
+		return $http({url:NextStepIndiaApiURL.sendMail,
+			  method:'POST',
+			  data:$.param(d),
+			  dataType:'json',
+			  cache:true,
+     		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+		});
+	};
+	
+	/* Faq Functions Ends */
+	
+	returnValue.getLookUps = function(d){		
+		return $http({url:NextStepIndiaApiURL.LookupURL,
+					  method:'POST',
+					  data:$.param(d),
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+				
+		});
+	};
+	returnValue.getLookupforOneParam = function(d){
+		return $http({url:NextStepIndiaApiURL.submitDrive,
+					  method:'POST',
+					  data:$.param(d),
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+				
+		});
+	};
+	returnValue.registrationFormSubmit = function(d){
+		return $http({url:NextStepIndiaApiURL.registrationSubmit,
+					  method:'POST',
+					  data:$.param(d),
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+				
+		});
+	};
+	returnValue.validateLogin=function(d){
+		return $http({url:NextStepIndiaApiURL.loginValidate,
+					  method:'POST',
+					  data:$.param(d),
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+			
+		});
+	};
+		returnValue.mailSendOTPlogin=function(d){
+		return $http({url:NextStepIndiaApiURL.mailSendOTPlogin,
+					  method:'POST',
+					  data:$.param(d),
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+			
+		});
+	};
+	
+	
+	returnValue.applicationFormFetch=function(d){
+		return $http({url:NextStepIndiaApiURL.applicationFormServlet,
+					  method:'POST',
+					  data:$.param(d),
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+			
+		});
+	};
+	returnValue.applicationFormSave=function(d){
+		return $http({url:NextStepIndiaApiURL.applicationFormServlet,
+					  method:'POST',
+					  data:$.param(d),
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+			
+		});
+	};
+	//added by aarti for PT issues
+	returnValue.applicationFormAgeRange=function(d){
+		return $http({url:NextStepIndiaApiURL.applicationFormServlet,
+					  method:'POST',
+					  data:$.param(d),
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+			
+		});
+	};
+	returnValue.captureTestLocation=function(d){
+		return $http({url:NextStepIndiaApiURL.applyForDrive,
+					  method:'POST',
+					  data:$.param(d),
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+			
+		});
+	};	
+	/*returnValue.launchCampusCommune=function(d){
+		return $http({url:NextStepIndiaApiURL.samlRedirectServlet,
+					  method:'POST',
+					  data:$.param(d),
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+			
+		});
+	};*/
+	
+	returnValue.downloadCertDocs=function(d){
+		return $http({url:NextStepIndiaApiURL.downloadCertdocs,
+					  method:'POST',
+					  data:$.param(d),
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+			
+		});
+	};
+	
+	returnValue.loadImageServlet=function(d){
+		return $http({url:NextStepIndiaApiURL.loadImageServlet,
+					  method:'POST',
+					  data:$.param(d),
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+			
+		});
+	};
+	
+	returnValue.loadDocumentServlet=function(d){
+		return $http({url:NextStepIndiaApiURL.loadDocumentServlet,
+					  method:'POST',
+					  data:$.param(d),
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+			
+		});
+	};
+	
+	returnValue.genAppFormPdf=function(d){
+		return $http({url:NextStepIndiaApiURL.genAppFormPdf,
+					  method:'POST',
+					  data:$.param(d),
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+			
+		});
+	};
+	returnValue.changePassword=function(d){
+		return $http({url:NextStepIndiaApiURL.loginValidate,
+					  method:'POST',
+					  data:$.param(d),
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+			
+		});
+	};
+	
+	returnValue.getSecurityQuestionId=function(d){
+		return $http({url:NextStepIndiaApiURL.loginValidate,
+			      method:'POST',
+			      data:$.param(d),
+			      dataType:'json',
+			      cache:true,
+			      headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+			});
+		};
+
+	returnValue.trackApplication=function(d){
+		return $http({url:NextStepIndiaApiURL.trackAppServlet,
+					  method:'POST',
+					  data:$.param(d),
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+			
+		});
+	};
+	returnValue.fetchSecQuest=function(d){
+		return $http({url:NextStepIndiaApiURL.loginValidate,
+					  method:'POST',
+					  data:$.param(d),
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+			
+		});
+	};
+	returnValue.forgotPasswordSubmit=function(d){
+		return $http({url:NextStepIndiaApiURL.loginValidate,
+					  method:'POST',
+					  data:$.param(d),
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+			
+		});
+	};
+	returnValue.NCPWebLogoutServlet=function(d){
+		return $http({url:NextStepIndiaApiURL.NCPWebLogoutServlet,
+					  method:'POST',
+					  data:$.param(d),
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+			
+		});
+	};
+	returnValue.getOffCampusDriveDetails=function(d){
+		return $http({url:NextStepIndiaApiURL.applyforOffCampusDrive,
+					  method:'POST',
+					  data:$.param(d),
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+			
+		});
+	};
+	
+	returnValue.fetchTestMode=function(d){
+		return $http({url:NextStepIndiaApiURL.applyforOffCampusDrive,
+					  method:'POST',
+					  data:$.param(d),
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+			
+		});
+	};
+	returnValue.getCandDriveDetails=function(d){
+		return $http({url:NextStepIndiaApiURL.applyforOffCampusDrive,
+					  method:'POST',
+					  data:$.param(d),
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+			
+		});
+	};
+	returnValue.fetchTestLocation=function(d){
+		return $http({url:NextStepIndiaApiURL.applyForDrive,
+					  method:'POST',
+					  data:$.param(d),
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+			
+		});
+	};	
+	returnValue.tstLocOffClk=function(d){
+			return $http({url:NextStepIndiaApiURL.applyforOffCampusDrive,
+						  method:'POST',
+						  data:$.param(d),
+						  dataType:'json',
+						  cache:true,
+		           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+		});
+	};
+
+	returnValue.fetchCertiDetails=function(d){
+		return $http({url:NextStepIndiaApiURL.certificationDetail,
+					  method:'POST',
+					  data:$.param(d),
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+		});
+	};
+	returnValue.saveCertification=function(d){
+		return $http({url:NextStepIndiaApiURL.certificationDetail,
+					  method:'POST',
+					  data:$.param(d),
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+		});
+	};
+	returnValue.deleteCertification=function(d){
+		return $http({url:NextStepIndiaApiURL.certificationDetail,
+					  method:'POST',
+					  data:$.param(d),
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+		});
+	};
+
+	returnValue.acceptOfferLetter=function(d){
+		return $http({url:NextStepIndiaApiURL.acceptOfferLetter,
+					  method:'POST',
+					  data:$.param(d),
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+		});
+	};
+	
+	returnValue.acceptprOfferLetter=function(d){
+		return $http({url:NextStepIndiaApiURL.acceptOfferLetter,
+					  method:'POST',
+					  data:$.param(d),
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+		});
+	};
+
+	
+	returnValue.getCampusDriveDetails=function(d){
+		return $http({url:NextStepIndiaApiURL.applyForDrive,
+					  method:'POST',
+					  data:$.param(d),
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+		});
+	};
+	
+
+	returnValue.checkAoiStatus=function(d){
+		return $http({url:NextStepIndiaApiURL.applyForDrive,
+					  method:'POST',
+					  data:$.param(d),
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+		});
+	};
+	
+	returnValue.getOffCandDriveDetails=function(d){
+		return $http({url:NextStepIndiaApiURL.applyForDrive,
+					  method:'POST',
+					  data:$.param(d),
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+		});
+	};
+	
+	
+	returnValue.submitCampusDriveDetails=function(d){
+		return $http({url:NextStepIndiaApiURL.applyForDrive,
+					  method:'POST',
+					  data:$.param(d),
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+		});
+	};
+	
+	
+	returnValue.submitCampusDriveAOI=function(d){
+		return $http({url:NextStepIndiaApiURL.applyForDrive,
+					  method:'POST',
+					  data:$.param(d),
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+		});
+	};
+	
+	returnValue.getHallTicketDetails=function(d){
+		return $http({url:NextStepIndiaApiURL.hallTicketDetails,
+					  method:'POST',
+					  data:$.param(d),
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+			
+		});
+	};	
+	
+	returnValue.confirmDrive=function(d){
+		return $http({url:NextStepIndiaApiURL.hallTicketDetails,
+					  method:'POST',
+					  data:$.param(d),
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+			
+		});
+	};	
+	
+	returnValue.getOpenPage=function(){
+		return $http({url:NextStepIndiaApiURL.openPageContent,
+					  method:'GET',
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+			
+		});
+	};	
+	returnValue.SAMLRedirectServlet=function(d){
+		return $http({url:NextStepIndiaApiURL.SAMLRedirectServlet,
+					  method:'POST',
+					  data:$.param(d),
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+			
+		});
+	};	
+	
+	returnValue.launchCampusCommune=function(d){
+		return $http({url:NextStepIndiaApiURL.launchCampusCommune,
+					  method:'POST',
+					  data:$.param(d),
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+			
+		});
+	};	
+	
+	returnValue.launchION=function(d){
+		return $http({url:NextStepIndiaApiURL.iONLaunch,
+					  method:'POST',
+					  data:$.param(d),
+					  dataType:'json',
+					  cache:true,
+					  headers: {'Content-Type' : 'application/x-www-form-urlencoded;charset-UTF-8'}
+		});
+	};
+	returnValue.saveSmartCardPhoto=function(d){
+		return $http({url:NextStepIndiaApiURL.saveSmartCardPhoto,
+					  method:'POST',
+					  data:$.param(d),
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+			
+		});
+	};	
+	
+
+	returnValue.askUsQuestion=function(d){
+		return $http({url:NextStepIndiaApiURL.askQuestion,
+			 method:'POST',
+			  data:$.param(d),
+			  dataType:'json',
+			  cache:true,
+      		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+			
+		});
+	};
+	
+	//added for Devops CICD
+	returnValue.getSvnRevisionDetails=function(){
+		return $http({url:NextStepIndiaApiURL.getSvnRevisionDetails,
+					  method:'GET',
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+			
+		});
+	};
+	returnValue.rexaChatbotVisibilityFlag=function(d){
+		return $http({url:NextStepIndiaApiURL.rexaChatbotVisibilityFlag,
+					  method:'GET',
+					  dataType:'json',
+					  cache:true,
+					  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+			
+		});
+	};
+	
+	//added for McAfee
+	returnValue.fileScanCheck=function(d){
+		return $http({url:NextStepIndiaApiURL.uploadFileScan,
+						method:'POST',
+						data:$.param(d),
+						dataType:'json',
+						cache:true,
+						headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+		});
+	};
+	
+	/*returnValue.authenticateUnlockURL=function(d,authKey,refId){
+		return $http({url:NextStepIndiaApiURL.authenticateUnlockURL+authKey+'/'+refId,
+					  method:'POST',
+					  data:$.param(d),
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+			
+		});
+	};*/ // commented for reset password url change
+	
+	//Added for Unlock Account
+	returnValue.authenticateUnlockURL=function(d,authKey){
+		return $http({url:NextStepIndiaApiURL.authenticateUnlockURL+authKey,
+					  method:'POST',
+					  data:$.param(d),
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+			
+		});
+	};
+	
+	
+	
+	//Added for iON redirection
+	returnValue.iONRedirect = function(d){
+		return $http({url:NextStepIndiaApiURL.iONLaunch,
+					  method:'POST',
+					  data:$.param(d),
+					  dataType:'json',
+					  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+		});
+	}; 
+	//for REXA chatbot
+	/*returnValue.getRexaResponse = function(d){
+		return $http({url:NextStepIndiaApiURL.getRexaResponse,
+					  method:'POST',
+					  data:$.param(d),
+					  dataType:'json',
+					  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+		});
+	};*/ 
+	
+	returnValue.getUserIconForRexa=function(){
+		return $http({url:NextStepIndiaApiURL.getUserIconForRexa,
+					  method:'GET',
+					  dataType:'json',
+					  cache:true,
+	           		  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+			
+		});
+	};
+	/*
+	returnValue.checkForDuplicateEmaiID = function(d){
+		return $http({url:NextStepIndiaApiURL.checkForDuplicateEmaiID,
+		method:'POST',
+		data:$.param(d),
+		dataType:'json',
+		cache:true,
+		headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'}
+		});
+		};
+	
+	returnValue.mailSendOTP = function(d){
+		return $http({url:NextStepIndiaApiURL.mailSendOTP,
+		method:'POST',
+		data:$.param(d),
+		dataType:'json',
+		cache:true,
+		headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'}
+		});
+		};
+	*/
+	
+//	Added for PT by Aditya
+	returnValue.getValueFromProperties = function(fileName) {
+		return $http({
+			url :NextStepIndiaApiURL.getValueFromProperties,
+			method : 'POST',
+			data: {'fileName': fileName },
+			headers : {
+				'Content-Type' : 'application/json; charset=utf-8'
+			}
+		});
+	};
+	/*
+	 returnValue.verifyMailSendOTP = function(d){
+		        return $http({url:NextStepIndiaApiURL.verifyMailSendOTP,
+		                      method:'POST',
+		                      data:$.param(d),
+		                      dataType:'json',
+		                      cache:true,
+		                      headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'}
+		                    });
+		    };*/
+	
+	/*returnValue.getRexaHostedUrls = function(d){
+		return $http({url:NextStepIndiaApiURL.getRexaHostedUrls,
+					  method:'GET',
+					  data:$.param(d),
+					  dataType:'json',
+					  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+		});
+	}; */
+	// added by snehal and rameshwar
+	returnValue.refreshGetCapt = function(cap){
+        return $http({url:NextStepIndiaApiURL.refreshCapt + cap,
+              method:'GET',
+              dataType:'json',
+              cache:true,
+              headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+        });
+	};
+	returnValue.checkDuplicateEmailID = function(d){
+		return $http({url:NextStepIndiaApiURL.checkDuplicateEmail,
+			  method:'POST',
+			  data:$.param(d),
+			  dataType:'json',
+			  cache:true,
+			  headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+		});
+	}; 
+	returnValue.mailSendOTP = function(d){
+		return $http({url:NextStepIndiaApiURL.mailSendOTP,
+			method:'POST',
+			data:$.param(d),
+			dataType:'json',
+			cache:true,
+			headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'}
+		});
+	}
+	returnValue.verifyMailSendOTP = function(d){
+		return $http({url:NextStepIndiaApiURL.verifyMailSendOTP,
+			method:'POST',
+			data:$.param(d),
+			dataType:'json',
+			cache:true,
+			headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'}
+		});
+	}
+	returnValue.checkOtherVerification = function(d){
+		return $http({url:NextStepIndiaApiURL.checkOtherVerification,
+			method:'POST',
+			data:$.param(d),
+			dataType:'json',
+			cache:true,
+			headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'}
+		});
+	}
+	// added by snehal
+	returnValue.refreshGetRegCapt = function(cap){
+        return $http({url:NextStepIndiaApiURL.refreshRegCapt + cap,
+              method:'GET',
+              dataType:'json',
+              cache:true,
+              headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+        });
+    };
+	returnValue.stopTimer = function(d){
+		return $http({url:NextStepIndiaApiURL.stopTimer,
+			method:'POST',
+			data:$.param(d),
+			dataType:'json',
+			cache:true,
+			headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'}
+		});
+	}
+	returnValue.verifyOTP = function(d){
+		return $http({url:NextStepIndiaApiURL.verifyOTP,
+			method:'POST',
+			data:$.param(d),
+			dataType:'json',
+			cache:true,
+			headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'}
+		});
+	}
+	returnValue.verifyLoginOTP = function(d){
+		return $http({url:NextStepIndiaApiURL.verifyLoginOTP,
+			method:'POST',
+			data:$.param(d),
+			dataType:'json',
+			cache:true,
+			headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'}
+		});
+	}
+	returnValue.stopLoginTimer = function(d){
+		return $http({url:NextStepIndiaApiURL.stopLoginTimer,
+			method:'POST',
+			data:$.param(d),
+			dataType:'json',
+			cache:true,
+			headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'}
+		});
+	}
+	
+
+    // end of the changes
+return returnValue;	
+});
+
+});

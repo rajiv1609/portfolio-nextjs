@@ -1,0 +1,140 @@
+define(['angular','nprogress','angularRoute', 'angularAnimate','angularResource','ui-bootstrap-tpls-0.11.2','autocomplete','select','angular-sanitize','getDataBaseServices','NextStepApiURL','constants','regularExpressionDirective'],function (angular,NProgress) {
+  'use strict';
+ 
+  var candApplication= angular.module('NextStepCandidateIndia',['ngRoute','ngSanitize','ui.bootstrap','NextStepCandidateIndia.services','NexStepCandidateIndia.ApiURL','NexStepCandidateIndia.Constants','autocomplete','ui.select','NextStepCandidateIndia.nameValidatorDirective']);
+  candApplication.factory('httpInterceptor', function($q, $log, $location, $rootScope) {
+	  // Private constants.
+      var CSRF_TOKEN_HEADER = 'X-XSRF-TOKEN',
+          HTTP_TYPES_TO_ADD_TOKEN = ['POST'];
+
+      // Private properties.
+      var token;
+  
+	    return {
+
+	      // optional method
+	      'response': function(response) {
+
+	       // if (response.config.url.indexOf("/campus/view/") > -1) {
+	          //console.log("FROM SERVICE ", response.config.url, response.data);
+	        //}
+
+	        if (response.data == 'SM_USER_CHANGE' || response.data == 'SESSION_EXPIRED') {
+	          location.href = "index.html";
+	        } else if (response.data == 'SM_USER_NULL' || response.data == 'INVALID_HEADER' || response.data == 'NO_ROLES_FOUND') {
+	          location.href = "SMconfigErrorPage";
+	        } else if (response.data == 'JAR_TYPE_PERFORMANCE') {
+	          location.href = "/login";
+	        } else if (response.ERROR_MSG && respnse.ERROR_MSG == 'HEAVY_LOAD') {
+	          location.href = "error.html?code=SystemOverload";
+	        }
+	        var newToken = (response.headers("XSRF-TOKEN") == undefined) ? false : true;
+			
+            if (newToken) {
+                token = response.headers("XSRF-TOKEN");
+            }
+
+	        return response;
+	      },
+
+	      'request': function(config) {
+	        if (config.url.indexOf("/campus/view/") > -1) {
+	          //config.url = config.url + "?cd=" + ((new Date()).getTime());
+	        }
+			if ((token == undefined || token == null) && config.dataType === "json"){
+	        	config.headers["CSRF-INIT"] = "INIT";
+	        }
+	        if (HTTP_TYPES_TO_ADD_TOKEN.indexOf(config.method.toUpperCase()) !== -1) {
+                config.headers[CSRF_TOKEN_HEADER] = token;
+            }
+	        return config;
+	      },
+
+	      // optional method
+	      'responseError': function(rejection) {
+
+	        var status = rejection.status;
+	        var jsonStr = rejection.data;
+	        $log.error('Response status: ' + status + '. ' + rejection);
+	        NProgress.done();
+			$('.overBackgroundFade').hide();
+			
+			if (status == 403) {//?code=E"+rejection.status+"&uid="+split[0]
+	          //location.href = "error.html?code=E"+status+"&ref="+"&userMsg="+userMsg;
+
+		        $('#loginModal').modal('hide');
+				$('.modal-backdrop').remove();
+				var userMsg = "";
+				userMsg = userMsg.replace(/\s+/g, '-');
+				if(rejection.config.url == "/campus/view/registrationFormSubmitController/verifyOTP"){
+					location.href = "error.html?code=E"+status+"&ref=Session_Expired";
+				}else if(rejection.config.url == "/campus/view/LoginController/LoginVerifyOTP"){
+					location.href = "error.html?code=E"+status+"&ref=Session_Expired";
+				}else{
+					location.href = "error.html?code=E"+status+"&ref="+jsonStr;
+				}
+	          /*$('<form action="error.html?code=E"'+status' method="post"><input type="hidden" id="stringData" value="'+userMsg+'" name="stringData" /></form>').appendTo('body').submit();*/
+	        }else if(status == 555){
+	        	console.log(jsonStr);
+	        	return $q.reject(rejection);
+	        }else {
+
+		        $('#loginModal').modal('hide');
+				$('.modal-backdrop').remove();
+				var userMsg = "";
+				userMsg = userMsg.replace(/\s+/g, '-');
+		        /*var split = jsonStr.split("**");
+		        $rootScope.Exception = jsonStr;
+		        $location.path("/error");*/
+		        	location.href = "error.html?code=E"+status+jsonStr;	
+		        }
+	        /*if (status == 500 || status == 403) {//?code=E"+rejection.status+"&uid="+split[0]
+	          location.href = "error.html?code=E" + status + "&uid=" + rejection.data.uniqueId;
+	        }*/
+	      }
+	    };
+	  });
+  
+  candApplication.config(['$routeProvider','$controllerProvider','$httpProvider',function($routeProvider,$controllerProvider,$httpProvider){
+	  
+	  candApplication.controller = $controllerProvider.register; 
+	  $httpProvider.interceptors.push('httpInterceptor');
+	  
+	  function resolver(dependencies) {
+	      var definition = {
+	        resolver: ['$q', '$rootScope', function($q, $rootScope) {
+	          var deferred = $q.defer();
+
+	          require(dependencies, function() {
+	            $rootScope.$apply(function() {
+	              deferred.resolve();
+	            });
+	          });
+
+	          return deferred.promise;
+	        }]
+	      }
+	      return definition;
+	    } 
+		$routeProvider.
+		when('/',{templateUrl: '/campus/pages/partials/india/CampusHomePage.html',resolve: resolver(['controllers','chatbotController']),controller:'homePageController'}).
+		when('/campusLite',{templateUrl: '/campus/pages/partials/india/CampusLiteHomePage.html',resolve: resolver(['controllers']),controller:'homePageController'}).
+		when('/password',{templateUrl: '/campus/pages/partials/india/CampusHomePage.html',resolve: resolver(['controllers']),controller:'homePageController'}).
+		when('/mainHome',{templateUrl: '/campus/pages/partials/india/CampusSelectRectTypePage.html',resolve: resolver(['controllers']),controller:'homePageController'}).
+		when('/homePage1',{templateUrl: '/campus/pages/partials/india/homePage.html',resolve: resolver(['controllers'])}).
+		when('/selectDrive',{templateUrl: '/campus/pages/partials/india/selectDrive.html',resolve: resolver(['controllers']),controller:'homePageController'}).
+		//when('/forgotPassword',{templateUrl: '/campus/pages/partials/india/forgotPassword.html',resolve: resolver(['RegisteredCand_Controller'])}).
+		when('/registrationPage',{templateUrl:'/campus/pages/partials/india/CampusRegistrationPage.html',resolve: resolver(['registration_Controller'])}).
+		when('/postRegistration',{templateUrl:'/campus/pages/partials/india/registeredCandidate/postRegistration.html',controller:'homePageController'}).
+		when('/homePage',{templateUrl:'/campus/pages/partials/india/registeredCandidate/RegisteredCandidate.html',resolve: resolver(['menu_controller','RegisteredCand_Controller','controllers']),controller:'menuController'}).
+		when('/applicationForm',{templateUrl:'/campus/pages/partials/india/registeredCandidate/applicationForm/applicationFormContainer.html',resolve: resolver(['applicationForm_Controller'])}).
+		when('/offerLetter/:displayPage/:authKey',{templateUrl:'/campus/pages/partials/india/letterVerification.html',resolve: resolver(['controllers'])}).
+		when('/candUnlock/:displayPage/:authKey/:refId',{templateUrl:'/campus/pages/partials/india/candUnlock.html',resolve: resolver(['controllers'])}).
+		//when('/change/:displayPage/:authKey',{templateUrl:'/campus/pages/partials/india/resetPassword.html',resolve: resolver(['controllers'])}).
+		when('/error',{templateUrl:'/campus/errorLocal.html',resolve: resolver(['controllers'])}).
+		when('/helpAndSupport',{templateUrl: '/campus/pages/partials/india/faq.html',resolve: resolver(['controllers']),controller:'faqPageController'}).
+		otherwise({redirectTo:'/'})
+	}]);
+  
+  return candApplication;
+});

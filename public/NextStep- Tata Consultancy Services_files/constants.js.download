@@ -1,0 +1,33 @@
+define(['angular'],function(angular){
+
+angular.module('NexStepCandidateIndia.Constants',[]).value('NextStepIndiaConstants',{
+	'FAIL':'FAIL',
+	'INVALID_LOGIN_FORMAT':'Invalid format for CT Reference ID /DT Reference Id!!! <br> <br> Please ensure you enter correct Format for CT Reference ID /DT Reference Id.',
+	'SESSION_EXPIRED':'Your Session has Expired.Please login',
+	'SUCCESS':'SUCCESS',
+	'WEBUSER':'W',
+	'DTCAND':'D',
+	'CTCAND':'C',
+	'OTHER_INSTITUTE':'711',
+	'N':'N',
+	'Y':'Y',
+	'CAND_ALREADY_EXIST':'You are already registered with TCS!!!',
+	'REGISTRATION_ERROR':'Error Occured while registering the candidate',
+	'LOGIN_BY_CONTINUE':'C',
+	'ITCAND':'IT',
+	'BPSCAND':'BPS',
+	'MIGRATED_CAND':'M',
+	'IT':'101',
+	'BPS':'102',
+	'India':'I',
+	'Invalid_Captcha':'Invalid Captcha',
+	'WRONG_EMAIL':'Wrong Email ID',
+	'INVALID_DATA':'InvalidData',
+	'TIMER_RUNNING':'TIMER_RUNNING',
+	'INVALID_OTP_1':'INVALID_OTP_1',
+	'INVALID_OTP_2':'INVALID_OTP_2',
+	'MAX_INVALID_OTP':'MAX_INVALID_OTP',
+	'THIRD_INVALID_LOGIN':'ACCOUNT_LOCKED_FOR_SHORT_PERIOD',
+	'FIFTH_INVALID_LOGIN':'ACCOUNT_LOCKED_FOR_THE_DAY'
+		});
+});

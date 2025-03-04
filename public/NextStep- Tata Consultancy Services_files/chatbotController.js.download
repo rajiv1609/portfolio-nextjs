@@ -1,0 +1,461 @@
+define(['angular','application','angularRoute','getDataBaseServices','constants','nprogress'],function(angular,candApplication,angularRoute,getDataBaseServices,constants,NProgress){
+	'use strict';
+
+	candApplication.directive('scrollBottom',['$timeout', function ($timeout) {
+		  return {
+		    scope: {
+		      scrollBottom: "="
+		    },
+		    link: function ($scope, $element) {
+		      $scope.$watchCollection('scrollBottom', function (newValue) {
+		    	  if (newValue) {
+		              $timeout(function(){
+		            	  $element[0].scrollTop = $element[0].scrollHeight;
+		              });
+		            }
+		      });
+		    }
+		  }
+		}]);
+	
+	candApplication.directive('addClass',['$timeout', function ($timeout) {
+		  return {
+		    scope: {
+		    	addClass: "="
+		    },
+		    link: function ($scope, $element) {
+		      $scope.$watchCollection('addClass', function (newValue) {
+		    	  if ($element[0].offsetHeight>34) {
+		              $timeout(function(){
+		            	  $element.addClass('small-border-radius');
+		              });
+		            }
+		      });
+		    }
+		  }
+		}]);
+	candApplication.controller('chatbotController',function($scope,$rootScope,$location,$window,getDataBaseServices,$timeout,$sce,$http){
+		
+		
+		$scope.input = {
+			query: ''
+		};
+
+	//$scope.chatBotFlag='N';
+	$scope.mainMenuLinkClick='N';
+	$scope.unreadMsgRexaIconShow = false;
+	$scope.rexaHelpContent = false;
+	$scope.rexaIntroContent = false;
+	$scope.firstTimeLoad = false;
+	$scope.postLogin = false;
+	$scope.rexaHostedUrlName = '';
+	
+	//adding for chatbot visibility
+	$scope.showRexaChatbot = function(){
+		getDataBaseServices.rexaChatbotVisibilityFlag().success(function(response){
+			if(response!=null && response!="" ){
+				$rootScope.chatBotVisible=response;
+			}else{
+				$rootScope.chatBotVisible = "Y";
+			}
+		}).error(function(response){
+
+			$rootScope.chatBotVisible = "Y";
+		});
+	}
+	
+	$scope.showRexaChatbot();
+	
+	/** To get User image if uploaded post login**/
+	
+	$scope.getUserImage = function(){
+		getDataBaseServices.getUserIconForRexa().success(function(response){
+	           if(response!=null && response!=""){
+	        	   $scope.userImage = [];
+	        	   var filename = response.fileName;
+	        	   var fileExt = filename.substr(filename.lastIndexOf('.') + 1);
+	        	   $scope.imageData = "data:image/"+fileExt+";base64,"+response.encodedImage;
+	        	   $scope.userImage.push($scope.imageData);
+	        	  
+	           }
+		});
+	}
+	
+	$scope.state = {
+	    focus: false
+	};
+	
+	$scope.goToMainMenu=function(){
+		$scope.mainMenuLinkClick='Y';
+		$scope.fetchBotResponse('Leading Questions');
+		//if($scope.selectedButton=='Cognitive Business Operations (CBO)' || $scope.selectedButton=='Information Technology (IT)'){
+			$scope.selectedButton = "";
+		//}
+	}
+
+	$scope.sendBtnOnFocus=function(){
+		$scope.state.focus = true;
+	}
+
+	$scope.sendBtnOnBlur=function(){
+		$scope.state.focus = false;
+	}
+	
+	$scope.getIndicesOfLinks = function(searchStr, answer){
+		 var searchStrLen = searchStr.length;
+		   /* if (searchStrLen == 0) {
+		        return [];
+		    }*/
+		    var startIndex = 0, index, indices = [];
+		   /* if (!caseSensitive) {
+		        str = str.toLowerCase();
+		        searchStr = searchStr.toLowerCase();
+		    }*/
+		    while ((index = answer.indexOf(searchStr, startIndex)) > -1) {
+		        indices.push(index);
+		        startIndex = index + searchStrLen;
+		    }
+		    return indices;
+	}
+
+	$scope.fetchBotResponse = function( question ) {
+		$scope.queryInfo = {
+				query: question,
+				
+		};
+		$scope.replyAwaited = true;
+		/*getDataBaseServices.getRexaResponse({"queryInfo":JSON.stringify($scope.queryInfo)}).success(function(response){*/
+		
+		$http.post( '/campus/view/rexa/response', $scope.queryInfo )
+		.success( function( response ){
+
+			if(undefined !=response && null != response){
+				var answer = response.answer;
+                var gif_URL = null;
+                var pdf_URL = null;  
+                var docx_URL = null;
+                var pptx_URL = null;
+                var video_URL = null;
+                
+                if(undefined !=response.answer && response.answer!==null){
+                	
+                	if( answer && ( answer.indexOf("#link") !== -1 ))  {
+                		var tempAnswer = answer;
+                		var indices = $scope.getIndicesOfLinks("#link",answer);
+                		for(var i=0;i<indices.length-1;i=i+2){
+                			/*var firstPosition = answer.indexOf("#link")+5;
+                            var lastPosition= answer.indexOf("#link",firstPosition);
+                            var newSRC = answer.substring(firstPosition,lastPosition);*/
+                			var newSRC = answer.substring(indices[i]+5,indices[i+1]);
+                            /*if( newSRC && ( newSRC === 'XperienceVideo' ) ){
+                            	response.answer=answer.replace( '#linkXperienceVideo#link', '' );
+                            	video_URL = newSRC;
+                            	
+                            }else {*/
+                            	
+                                var beforLink = answer.substring(0,indices[i]-1);
+                                var afterLink = answer.substring(indices[i+1]+6);
+
+                               // response.answer = beforLink+" <a target='_blank' href='https://"+newSRC+"'>"+newSRC+"</a> "+afterLink;
+                                response.answer=tempAnswer.replace( "#link"+newSRC+"#link", "<a target='_blank' href='"+newSRC+"'>"+newSRC+"</a>" );
+                                tempAnswer =  response.answer;
+                            //}
+                		}
+
+                    }
+
+                    if(answer && ( answer.indexOf("gif") !== -1 )) {
+
+                        var firstPosition=answer.indexOf("#gif")+4;
+                        var lastPosition=answer.indexOf('#gif',firstPosition);
+
+                        var fileName=answer.substring(firstPosition,lastPosition);
+
+                        if( fileName && ( fileName === 'Codevita-2019-AnimatedMailer_Global-Registration')) {
+                        	response.answer=answer.replace( '#gifCodevita-2019-AnimatedMailer_Global-Registration#gif', '' );
+                        	gif_URL = fileName;
+
+                        }
+
+                    }
+
+                    if(answer && ( answer.indexOf("pdf") !== -1 )) {
+
+                        var firstPosition=answer.indexOf("#pdf")+4;
+                        var lastPosition=answer.indexOf('#pdf',firstPosition);
+
+                        var fileName=answer.substring(firstPosition,lastPosition);
+
+                        if( fileName && ( fileName === 'RegistrationApplication' ) ) {
+                            response.answer=answer.replace( '#pdfRegistrationApplication#pdf', '' );
+                            pdf_URL = fileName;
+                        }else if( fileName && ( fileName === 'NQT&Campus' ) ){
+                        	response.answer=answer.replace( '#pdfNQT&Campus#pdf', '' );
+                            pdf_URL = fileName;
+                        }else if( fileName && ( fileName === 'VirtualPresentation' ) ){
+                        	response.answer=answer.replace( '#pdfVirtualPresentation#pdf', '' );
+                            pdf_URL = fileName;
+                        }else if( fileName && ( fileName === 'BackgroundCheck' ) ){
+                        	response.answer=answer.replace( '#pdfBackgroundCheck#pdf', '' );
+                            pdf_URL = fileName;
+                        }
+
+                    }
+                    response.answer=response.answer.split('<br>');
+
+                    var index=0;
+                    while(index<response.answer.length)
+                    {
+                        response.answer[index]=$sce.trustAsHtml(response.answer[index]);
+                        index++;
+                    }
+
+                }
+                
+                var lastElement = $scope.messages[ $scope.messages.length -1 ];
+
+                if( lastElement &&
+                    lastElement.from === 'REXA' &&
+                    !lastElement.gifURL &&
+                    !lastElement.pdfURL &&
+                    !lastElement.videoURL &&
+                    lastElement.msg.leadingInformation &&
+                    !gif_URL &&
+                    !pdf_URL &&
+                    !video_URL &&
+                    lastElement.msg.leadingInformation.length == 0 ) {
+
+                    lastElement.msg.answer = lastElement.msg.answer.concat( response.answer );
+                    lastElement.msg.leadingInformation = response.leadingInformation;
+
+                    $rootScope.$broadcast( 'ChatMessagesUpdated' );
+                    $scope.scrollMessages.push(lastElement.msg.answer);
+                } else {
+
+                    var reply = {
+                            from: 'REXA',
+                            msg: response,
+                            gifURL:gif_URL,
+                            pdfURL:pdf_URL,
+                            videoURL : video_URL,
+                            senderImage: 'pages/images/ChatbotImages/rexa-mascot-icon.svg'
+                    };
+
+                    $scope.messages.push( reply );
+                    $scope.scrollMessages.push(reply);
+
+                }
+                
+                if(!$scope.clicked && $scope.firstTimeLoad){
+                	$scope.unreadMsgRexaIconShow = true;
+                }
+			}
+			$scope.replyAwaited = false;
+		}).error( function( response ) {
+ 			var reply = {
+ 					from:'REXA',
+ 					msg:'Oops! Something went wrong. Please try again after some time.',
+                    senderImage: 'pages/images/ChatbotImages/rexa-mascot-icon.svg'
+
+ 			};
+ 			$scope.messages.push( reply );
+ 			 $scope.scrollMessages.push(reply);
+ 			$scope.replyAwaited = false;
+ 		})
+	};
+
+	
+	$scope.ask = function( query ) {
+
+		if( query ) {
+		    var lastElement = $scope.messages[ $scope.messages.length -1 ];
+
+		    if( lastElement && lastElement.from === 'User' ) {
+		        lastElement.msg.answer.push( query );
+		        $rootScope.$broadcast( 'ChatMessagesUpdated' );
+		        $scope.scrollMessages.push(lastElement.msg.answer);
+		    } else {
+
+                var qry= [query];
+                var senderImage = $scope.userImage;
+                var message = {
+                        from: 'User',
+                        msg: {
+                            answer: qry
+                        },
+                        senderImage: senderImage
+                };
+
+                $scope.messages.push( message );
+                $scope.scrollMessages.push(message);
+
+			}
+			$scope.input.query = '';
+
+			$scope.fetchBotResponse( query );
+
+		}
+
+	};
+
+	$scope.askLeadingQuestion = function( question ){
+		$scope.selectedButton =question.buttonText;
+		$scope.ask( question.buttonText );
+	};
+
+	$scope.askQuestion = function() {
+		$scope.ask( $scope.input.query );
+	}
+
+    $scope.clicked=false;
+    $scope.sendMsg='';
+    $scope.error='';
+    $scope.messages=[];
+    $scope.scrollMessages=[]; /// this is just for proper functioning of scroll bar
+    
+    $scope.changeView=function(){
+    	if(!$scope.clicked && !$scope.firstTimeLoad){
+    		$scope.firstTimeLoad = true;
+    		//$scope.init();
+    		$scope.getUserImage();
+    	}
+    	$scope.clicked=!$scope.clicked;
+    	$scope.rexaHelpContent = false;
+ 		$scope.rexaIntroContent = false;
+ 		
+ 		if($scope.unreadMsgRexaIconShow){
+ 			$scope.unreadMsgRexaIconShow = false;
+ 		}
+    };
+
+   
+    $scope.init = function() { 
+    	$scope.fetchBotResponse( 'Leading Question' );
+    } 
+    
+    
+    $scope.downloadDoc = function( fileName, fileType){
+    	//var config = { responseType: 'arraybuffer' };
+    	$(document).ready(function(){    		
+			/*$http({
+				url:"/campus/view/rexa/document",
+				method:'GET',
+				params:{'docName':fileName},
+				responseType: 'arraybuffer'
+			}).success(function(response){*/
+    		    		
+    		$http.get('/campus/view/rexa/document/'+fileName, { responseType: 'arraybuffer'}).success(function(response){
+				var file = new Blob([response], {type: fileType});
+				if (window.navigator && window.navigator.msSaveOrOpenBlob) {			// for IE
+     				 
+     				 window.navigator.msSaveOrOpenBlob(file, fileName);
+   				}else {																	// for Non-IE (chrome, firefox etc.)
+     				 var urlObject = URL.createObjectURL(file);
+
+    				 var downloadLink = angular.element('<a>Download</a>');
+      				 downloadLink.css('display','none');
+     				 downloadLink.attr('href', urlObject);
+     				 downloadLink.attr('download', fileName);
+     				 angular.element(document.body).append(downloadLink);
+     				 downloadLink[0].click();
+
+     				 // cleanup
+     				 downloadLink.remove();
+     				 URL.revokeObjectURL(urlObject);
+ 				}
+			});
+		});	
+    }
+    
+    $scope.downloadPdf = function( message ) {
+    	var fileName = message.pdfURL;
+    	var fileType = "application/pdf";
+    	 $scope.downloadDoc(fileName,fileType);
+    	
+    }
+    
+    $scope.downloadGif = function( message ) {
+    	var fileName = message.gifURL;
+    	var fileType = "image/gif";
+    	 $scope.downloadDoc(fileName,fileType);
+    	
+    }
+    
+    /*$scope.showPreVideoPopup = function(message){
+    	//window.scrollTo(0,0);
+    	$scope.rexaHostedUrlName = message.videoURL;
+    	$("#rexaConfirmationModal").modal('toggle');
+    	$("#rexaConfirmationModal").css("display", "block");
+    	$("#rexaConfirmationModal").css("opacity", "1");
+    	
+    }
+    
+    $scope.clickOKToContinueRedirection = function(){    	
+    	
+    	//getDataBaseServices.getRexaHostedUrls({"rexaHostedUrlName":$scope.rexaHostedUrlName}).success(function(response){
+    	$http.get( '/campus/view/rexa/urlLink', $scope.rexaHostedUrlName ).success(function(response){
+    		$scope.rexaHostedUrlLink = response;
+			$("#RedirectToREXA").get(0).click();
+	    	$("#rexaConfirmationModal").modal('toggle');
+	    	$("#rexaConfirmationModal").css("display", "none");
+	    	$("#rexaConfirmationModal").css("opacity", "0");
+		}).error(function(response){
+			$("#rexaConfirmationModal").modal('toggle');
+		});
+    }*/
+    
+   /* $scope.clickCancelToStopRedirection = function(){
+    	$("#rexaConfirmationModal").modal('toggle');
+    }
+   */
+
+	/*$scope.$on( 'UserLoggedOut', function() {
+		$scope.messages = [];
+	});*/
+	
+	$rootScope.$on('userLoggedIn', function () {
+		$scope.messages = [];
+		$scope.scrollMessages = [];
+		$scope.clicked = false;
+		$scope.firstTimeLoad = false;
+		$scope.postLogin = true;
+		if($rootScope.chatBotVisible=='Y'){
+			$scope.init();
+		}
+		//$("#idRexaMaximized").css({"top":"131px"});
+	});
+	
+	
+	$scope.rexaHelpContentOnLoad = function() {
+		if(!$scope.firstTimeLoad && !$scope.postLogin){
+			$timeout( function() {
+	            $scope.rexaIntroContent = true;
+	        }, 3000 );
+	        
+	        $timeout( function() {
+	            $scope.rexaHelpContent = true;
+	        }, 5000 );
+	        $scope.rexaHelpContentOnLoadHide();
+		}
+		
+		if(!$scope.firstTimeLoad && $rootScope.chatBotVisible=='Y'){
+			$scope.init();
+		}
+		
+	};
+	
+	$scope.rexaHelpContentOnLoadHide = function(){
+		//if($scope.rexaIntroContent && $scope.rexaHelpContent){
+			$timeout( function() {
+	            $scope.rexaIntroContent = false;
+	            $scope.rexaHelpContent = false;
+	            $scope.unreadMsgRexaIconShow = true;
+	            
+	        }, 15000 );
+		//}
+	}
+	
+	
+});
+
+});

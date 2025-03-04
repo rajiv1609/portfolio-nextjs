@@ -1,0 +1,79 @@
+require.config({
+    baseUrl: "/campus/pages/js",
+    waitSeconds: 500,
+    paths: {
+    	'domReady': '/campus/pages/js/domReady',
+        'angular': '/campus/pages/js/external/angular.min_18',
+        'jquery': '/campus/pages/js/external/jquery-3.3.1.min',
+        'bootstrap': '/campus/pages/js/external/bootstrap.min',
+        'ui-bootstrap-tpls-0.11.2': '/campus/pages/js/external/ui-bootstrap-tpls-0.11.2',
+        'ui.select2': '/campus/pages/js/external/select2.min',
+        'angularRoute': '/campus/pages/js/external/angular-route.min',
+        'angularAnimate': '/campus/pages/js/external/angular-animate.min',
+        'angularResource': '/campus/pages/js/external/angular-resource-1.0.7',
+        'ui.datepicker': '/campus/pages/js/external/bootstrap-datepicker',
+        'ngStorage': '/campus/pages/js/external/ngStorage',
+        'angular-input-match':'/campus/pages/js/external/angular-input-match',
+        'nprogress':'/campus/pages/js/external/nprogress',
+        'select':'/campus/pages/js/external/select.min',
+        'bootstrapValidator':'/campus/pages/js/external/bootstrapValidator.min',
+        'lazyLoad':'/campus/pages/js/external/jquery.lazyload.min',
+        'autocomplete':'/campus/pages/js/external/autocomplete',
+        'angular-sanitize':'/campus/pages/js/external/angular-sanitize.min',
+        'parallax':'/campus/pages/js/external/parallax.min',
+        'application':'/campus/pages/js/InternalIndiaJs/Application',
+        'regularExpressionDirective':'/campus/pages/js/InternalIndiaJs/directives/regularExpressionDirective',
+        'constants':'/campus/pages/js/InternalIndiaJs/javaScriptUtil/constants',
+        'applicationForm_Controller':'/campus/pages/js/InternalIndiaJs/controller/applicationForm_Controller',
+        'menu_controller':'/campus/pages/js/InternalIndiaJs/controller/menu_controller',
+        'NextStepApiURL':'/campus/pages/js/InternalIndiaJs/NextStepApiURL',
+        'controllers':'/campus/pages/js/InternalIndiaJs/controller/controllers',
+        'NextStepApplicationFormController':'/campus/pages/js/InternalIndiaJs/controller/NextStepApplicationFormController',
+        'getDataBaseServices':'/campus/pages/js/InternalIndiaJs/Services/services',
+        'factory':'/campus/pages/js/InternalIndiaJs/Services/factory',
+        'NextStepFilters':'/campus/pages/js/InternalIndiaJs/NextStepFilters',
+        'RegisteredCand_Controller':'/campus/pages/js/InternalIndiaJs/controller/RegisteredCand_Controller',
+        'passwordValidator':'/campus/pages/js/InternalIndiaJs/passwordValidator',
+        'feedbackformController':'/campus/pages/js/InternalIndiaJs/controller/feedbackformController',
+        'offerLetterController':'/campus/pages/js/InternalIndiaJs/controller/offerLetterController',
+        'certificationDetailsController':'/campus/pages/js/InternalIndiaJs/controller/certificationDetailsController',
+        'joiningAndILPController':'/campus/pages/js/InternalIndiaJs/controller/joiningAndILPController',
+        'registration_Controller':'/campus/pages/js/InternalIndiaJs/controller/registration_Controller',
+        'chatbotController': '/campus/pages/js/InternalIndiaJs/controller/chatbotController'
+        
+        //'spin':'/campus/pages/js/external/spin.min,
+    },
+ 	 shim: {
+    'angular': {
+      'deps': ['jquery'],
+      'exports': 'angular'
+    },
+    'ui-bootstrap-tpls-0.11.2': {
+      deps: ['jquery','bootstrap','angular']
+    },
+    'angularResource': ['angular'],
+    'angularRoute': ['angular'],
+    'angularAnimate': ['angular'],
+    'angular-sanitize':['angular'],
+    'bootstrap': ['jquery'],
+    'ngStorage' : ['angular'],
+    'ui.datepicker' : ['angular'],
+    'angular-input-match':['angular'],
+    'select':['angular'],
+    'bootstrapValidator':['angular'],
+    'angular-sanitize':['angular'],
+    'autocomplete':['angular'],
+    'ui.select2': ['jquery','autocomplete']
+    
+  }
+  });
+ require(['angular', 'application','bootstrap','autocomplete', 'chatbotController'], function(angular, application,bootstrap) {
+    // bootstrap the app manually
+		 //app.init();
+		  angular.element().ready(function() {
+    require(['domReady'], function() {
+      angular.bootstrap(document, ['NextStepCandidateIndia']);
+    });
+});
+
+}); 

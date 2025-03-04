@@ -1,0 +1,63 @@
+define(['angular'],function(angular){
+angular.module('NexStepCandidateIndia.ApiURL',[]).value('NextStepIndiaApiURL',{
+	/*"LookupURL":"/campus/GetLookUps",*/
+	"LookupURL":"/campus/view/GetLookUpsController/GetLookUps",
+	/*"submitDrive":"/campus/SubmitDrive",*/
+	"submitDrive":"/campus/view/SubmitDriveController/SubmitDrive",
+	//"registrationSubmit":"/campus/RegistrationFormSubmit",
+	"checkDuplicateUserId":"/campus/view/FaqController/checkDuplicateUserId",
+	"resendfaqOTPlogin":"/campus/view/FaqController/resendfaqOTPlogin",	
+	"registrationSubmit":"/campus/view/registrationFormSubmitController/registrationForm",
+	/*"loginValidate":"/campus/LoginController",*/
+	"loginValidate":"/campus/view/LoginController/dologin",
+	/*"applicationFormServlet":"/campus/ApplicationFormServlet",*/
+	"applicationFormServlet":"/campus/view/ApplicationFormController/ApplicationForm",
+	"SAMLRedirectServlet":"/campus/SAMLRedirectServlet",
+	"downloadCertdocs":"/campus/CopyOfLoadDocumentServlet",
+	/*"loadImageServlet":"/campus/LoadImageServlet",*/
+	"loadImageServlet":"/campus/view/LoadImageServlet/getImage",
+	/*"loadDocumentServlet" :"/campus/LoadDocumentServlet",*/
+	"loadDocumentServlet" :"/campus/view/LoadImageServlet/getDocument",
+	"genAppFormPdf":"/campus/AppFormPDFServlet",
+	/*"postRegistrationServlet":"/campus/postRegistrationServlet",*/
+	"trackAppServlet":"/campus/view/TrackAppStatusController/trackAppStatus",
+	"NCPWebLogoutServlet":"/campus/NCPWebLogoutServlet",
+	"FetchAppFormServlet":"/campus/FetchApplicationFormServlet",
+	"applyForDrive":"/campus/view/ApplyforDriveController/applyforDrive",
+	"applyforOffCampusDrive":"/campus/view/ApplyforDriveController/applyforOffCampusDrive",
+	"certificationDetail" : "/campus/view/CertificationDetailsController/certificationDetail",
+	"acceptOfferLetter":"/campus/view/OfferLetterController/acceptOffer",
+	"hallTicketDetails" : "/campus/view/ApplyforDriveController/hallTicketDetails",
+	"openPageContent" : "/campus/view/HomePageController/getOpenPage",
+	"launchCampusCommune" : "/campus/view/CampusCommuneController/redirectToCampusCommune",
+	"saveSmartCardPhoto" :"/campus/view/LoginController/uploadPhoto",
+	"faqData":"/campus/view/FaqController/FaqData",
+	"loginVerify":"/campus/view/FaqController/verifylogin",
+	"sendMail":"/campus/view/FaqController/sendMail",
+	"getSvnRevisionDetails":"/campus/view/HomePageController/getVersion",
+	"uploadFileScan":"/campus/view/FileScanController/ScanFileUpload",
+	"iONLaunch":"/campus/view/IONController/redirectToION",
+	"authenticateUnlockURL":"/campus/view/LoginController/validateUnlockAccount/",
+	"getRexaResponse" : "/campus/view/rexa/response",
+	"getUserIconForRexa" : "/campus/view/user/image",
+	"getRexaHostedUrls" : "/campus/view/rexa/urlLink",
+	"rexaChatbotVisibilityFlag" : "/campus/view/rexa/rexaChatbotVisibilityFlag",
+	"askQuestion" : "/campus/view/HomePageController/askQuestion",
+	"getValueFromProperties":"/campus/view/GetLookUpsController/getValueFromProperties",
+	"refreshCapt":"/campus/view/LoginController/refreshCapt/",
+	"mailSendOTPlogin":"/campus/view/LoginController/mailSendOTPlogin",
+	/*"checkForDuplicateEmaiID":"/campus/view/registrationFormSubmitController/checkDuplicateEmail",
+	"mailSendOTP":"/campus/view/registrationFormSubmitController/mailSendOTP",
+	"verifyMailSendOTP":"/campus/view/registrationFormSubmitController/verifyMailSendOTP"*/
+	"checkDuplicateEmail" : "/campus/view/registrationFormSubmitController/checkDuplicateEmail",
+	"mailSendOTP": "/campus/view/registrationFormSubmitController/mailSendOTP",
+	"verifyMailSendOTP": "/campus/view/registrationFormSubmitController/verifyMailSendOTP",
+	"checkOtherVerification": "/campus/view/registrationFormSubmitController/checkOtherVerification",
+	"refreshRegCapt":"/campus/view/registrationFormSubmitController/refreshRegCapt/",
+	"stopTimer":"/campus/view/registrationFormSubmitController/stopTimer",
+	"verifyOTP":"/campus/view/registrationFormSubmitController/verifyOTP",
+	"verifyLoginOTP":"/campus/view/LoginController/verifyLoginOTP",
+	"stopLoginTimer":"/campus/view/LoginController/stopLoginTimer"
+});
+
+});

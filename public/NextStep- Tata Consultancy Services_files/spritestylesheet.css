@@ -1,0 +1,101 @@
+.sprite {
+    background-image: url(/campus/pages/images/spritesheet.png);
+    background-repeat: no-repeat;
+    display: block;
+}
+
+.sprite-Alerts {
+    width: 25px;
+    height: 26px;
+    background-position: -5px -5px;
+}
+
+.sprite-Arrow {
+    width: 23px;
+    height: 23px;
+    background-position: -40px -5px;
+}
+
+.sprite-CC-Arrow {
+    width: 5px;
+    height: 9px;
+    background-position: -73px -5px;
+}
+
+.sprite-Color-Logo {
+    width: 253px;
+    height: 35px;
+        background-position: -4px -40px;
+}
+
+.sprite-Help {
+    width: 27px;
+    height: 27px;
+    background-position: -5px -86px;
+}
+
+.sprite-Logo {
+    width: 253px;
+    height: 35px;
+   background-position: -4px -123px;
+}
+
+.sprite-Mouse {
+    width: 22px;
+    height: 32px;
+    background-position: -268px -5px;
+}
+
+.sprite-Register-Now-Arrow {
+    width: 6px;
+    height: 9px;
+    background-position: -88px -5px;
+}
+
+.sprite-TCS {
+    width: 226px;
+    height: 12px;
+    background-position: -42px -86px;
+}
+
+.sprite-TCSBuzz {
+    width: 27px;
+    height: 27px;
+    background-position: -5px -168px;
+}
+
+.sprite-Top {
+    width: 24px;
+    height: 24px;
+    background-position: -104px -5px;
+}
+
+.sprite-User {
+    width: 17px;
+    height: 18px;
+    background-position: -138px -5px;
+}
+
+.sprite-User-Dark {
+    width: 17px;
+    height: 18px;
+    background-position: -165px -5px;
+}
+
+.sprite-WhiteArrow {
+    width: 23px;
+    height: 23px;
+    background-position: -192px -5px;
+}
+
+.sprite-search {
+    width: 18px;
+    height: 18px;
+    background-position: -225px -5px;
+}
+
+.sprite-search-Dark {
+    width: 18px;
+    height: 18px;
+    background-position: -268px -47px;
+}
